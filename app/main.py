@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 load_dotenv()
-
+from fastapi_jwt_auth.exceptions import AuthJWTException
 from app.sdk import SDK
 from .routers import gateway
 from .routers import auth
@@ -16,6 +16,20 @@ from .utils import get_gateway_by_id
 
 app = FastAPI()
 
+# def credential_exception_handler(request: Request, exc: AuthJWTException):
+#     return JSONResponse(
+#         status_code=exc.status_code,
+#         content={"detail": exc.message}
+#     )
+
+# app.add_exception_handler(AuthJWTException, credential_exception_handler)
+@app.exception_handler(AuthJWTException)
+def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+    
 app.include_router(gateway.router)
 app.include_router(auth.auth)
 app.include_router(db.DB)
@@ -24,18 +38,6 @@ app.include_router(task.task)
 app.include_router(weather.weather)
 app.include_router(auth2.auth2)
 
-
-
-class CredentialException(HTTPException):
-    pass
-
-def credential_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
-    )
-
-app.add_exception_handler(CredentialException, credential_exception_handler)
 
 class ListVirtualGroupRequest(BaseModel):
     gwid: str
