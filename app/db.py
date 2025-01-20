@@ -759,3 +759,10 @@ async def get_account_list(query: GetAccountListQuery):
     finally:
         sdk.logout()
 
+@DB.post("/get_stats", tags=["DB"])
+async def get_stats():
+    return { "data": {
+        "gateway_count": 1,
+        "user_count": 24,
+        "device_count": 5
+    } }
