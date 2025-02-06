@@ -9,10 +9,12 @@ import time
 import urllib.parse
 import calendar
 from .celery_app import perform_task_celery, add
+from tasks.sync_user import UpsertUsersToSupabase
 import urllib.parse
 import abc
 import json
 import re
+import luigi
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -735,6 +737,7 @@ async def get_account_list(query: GetAccountListQuery):
             for _, value in p.items():
                 if value[".type"] == "wfuser":
                     user = {
+                        "gwid": gwid,
                         "username": value["username"],
                         "remark": value["remark"],
                         "pppoe": value["pppoe"],
@@ -747,10 +750,10 @@ async def get_account_list(query: GetAccountListQuery):
                         "macbound": value["macbound"],
                         "changepwd": value["changepwd"],
                         "id": value["id"],
-                        "online": True
+                        "online": "True"
                     }
-                    
                     list.append(user)
+            luigi.build([UpsertUsersToSupabase(list)], local_scheduler=True)
             return { "data": list }
         else:
             raise HTTPException(status_code=401, detail="登录失败")
