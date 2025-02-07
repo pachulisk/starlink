@@ -783,7 +783,9 @@ async def get_account_list(query: GetAccountListQuery):
                 #     del user["online"]
                 # 执行upsert操作
                 # logger.info(f"upsert user: {user}")
+                print(f"upsert user: {user}")
                 response = upsert_user(user)
+                print(f"response: {response}")
                 # response = supabase.table("gw_users").upsert(user).execute()
                 # 检查错误（supabase-python的响应结构可能不同，请根据实际情况调整）
                 # logger.info(f"response: {response}")
