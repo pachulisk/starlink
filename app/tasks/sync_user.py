@@ -40,9 +40,9 @@ class UpsertUsersToSupabase(luigi.Task):
 
         # 批量执行upsert操作
         for user in users:
-            if "online" in user:
-                #删除online字段
-                del user["online"]
+            # if "online" in user:
+            #     #删除online字段
+            #     del user["online"]
             # 执行upsert操作
             logger.info(f"upsert user: {user}")
             response = upsert_user(user)
