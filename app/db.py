@@ -715,12 +715,13 @@ def get_gw_online_status_by_id(gwid, id):
        .eq("id", id)
        .execute())
     if len(response.data) <= 0:
+        print(f"gwid = {gwid}, id = {id} not found its online status")
         return False
     else:
         online = response.data[0]["online"]
-        if online == "true":
+        if online == "true" or online == "True":
             return True
-        elif online == "false":
+        elif online == "false" or online == "False":
             return False
         else:
             return False
