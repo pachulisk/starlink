@@ -15,6 +15,7 @@ import abc
 import json
 import re
 import luigi
+from .utils import upsert_user
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -791,3 +792,24 @@ async def get_stats():
         "user_count": 24,
         "device_count": 5
     } }
+
+@DB.post("/test_upsert_user", tags=["DB"])
+async def test_upsert_user():
+    fake_user = {
+      "gwid": "97935833-c028-4f7b-ad5f-26f296cf935a",
+      "username": "rflh",
+      "remark": "ISP-1-bandwidth1733974887482",
+      "pppoe": "false",
+      "webauth": "true",
+      "static": "false",
+      "staticip": " ",
+      "datelimit": "2029-01-01",
+      "group": "0",
+      "logins": "0",
+      "macbound": "0",
+      "changepwd": "true",
+      "id": "wfuser1737514663430"
+    }
+    # "online": "False"
+    response = upsert_user(fake_user)
+    return response
