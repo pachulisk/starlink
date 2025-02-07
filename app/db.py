@@ -778,9 +778,9 @@ async def get_account_list(query: GetAccountListQuery):
                     list.append(user)
             # luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
             for user in list:
-                # if "online" in user:
-                #     #删除online字段
-                #     del user["online"]
+                if "online" in user:
+                    #删除online字段
+                    del user["online"]
                 # 执行upsert操作
                 # logger.info(f"upsert user: {user}")
                 print(f"upsert user: {user}")
