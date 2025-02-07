@@ -3,7 +3,7 @@ import json
 import logging
 from typing import List, Dict
 from ..supabase import supabase
-
+from ..utils import upsert_user
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -45,7 +45,8 @@ class UpsertUsersToSupabase(luigi.Task):
                 del user["online"]
             # 执行upsert操作
             logger.info(f"upsert user: {user}")
-            response = supabase.table("gw_users").upsert(user).execute()
+            response = upsert_user(user)
+            # response = supabase.table("gw_users").upsert(user).execute()
             # 检查错误（supabase-python的响应结构可能不同，请根据实际情况调整）
             logger.info(f"response: {response}")
             if hasattr(response, 'error') and response.error:
