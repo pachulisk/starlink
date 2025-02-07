@@ -9,7 +9,7 @@ import time
 import urllib.parse
 import calendar
 from .celery_app import perform_task_celery, add
-from tasks.sync_user import UpsertUsersToSupabase
+from .tasks.sync_user import UpsertUsersToSupabase
 import urllib.parse
 import abc
 import json
