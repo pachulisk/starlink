@@ -776,21 +776,21 @@ async def get_account_list(query: GetAccountListQuery):
                         "online": str(get_gw_online_status_by_id(gwid, value["id"]))
                     }
                     list.append(user)
-            # luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
-            for user in list:
-                if "online" in user:
-                    #删除online字段
-                    del user["online"]
-                # 执行upsert操作
-                # logger.info(f"upsert user: {user}")
-                print(f"upsert user: {user}")
-                response = upsert_user(user)
-                print(f"response: {response}")
-                # response = supabase.table("gw_users").upsert(user).execute()
-                # 检查错误（supabase-python的响应结构可能不同，请根据实际情况调整）
-                # logger.info(f"response: {response}")
-                if hasattr(response, 'error') and response.error:
-                    raise Exception(f"Supabase操作失败: {response.error}")
+            luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
+            # for user in list:
+            #     if "online" in user:
+            #         #删除online字段
+            #         del user["online"]
+            #     # 执行upsert操作
+            #     # logger.info(f"upsert user: {user}")
+            #     print(f"upsert user: {user}")
+            #     response = upsert_user(user)
+            #     print(f"response: {response}")
+            #     # response = supabase.table("gw_users").upsert(user).execute()
+            #     # 检查错误（supabase-python的响应结构可能不同，请根据实际情况调整）
+            #     # logger.info(f"response: {response}")
+            #     if hasattr(response, 'error') and response.error:
+            #         raise Exception(f"Supabase操作失败: {response.error}")
             return { "data": list }
         else:
             raise HTTPException(status_code=401, detail="登录失败")
