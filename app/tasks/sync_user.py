@@ -7,9 +7,17 @@ from ..supabase import supabase
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # 输出到控制台
+        logging.FileHandler("app.log")  # 输出到文件
+    ]
 )
-logger = logging.getLogger('luigi_task_logger')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    logger.addHandler(logging.StreamHandler())
+    logger.addHandler(logging.FileHandler("luigi.log"))
 
 
 class UpsertUsersToSupabase(luigi.Task):
