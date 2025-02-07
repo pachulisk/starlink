@@ -753,7 +753,7 @@ async def get_account_list(query: GetAccountListQuery):
                         "online": "True"
                     }
                     list.append(user)
-            luigi.build([UpsertUsersToSupabase(list)], local_scheduler=True)
+            luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
             return { "data": list }
         else:
             raise HTTPException(status_code=401, detail="登录失败")
