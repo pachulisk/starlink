@@ -27,8 +27,10 @@ class UpsertUsersToSupabase(luigi.Task):
                 #删除online字段
                 del user["online"]
             # 执行upsert操作
+            print(f"upsert user: {user}")
             response = supabase.table("gw_users").upsert(user).execute()
             # 检查错误（supabase-python的响应结构可能不同，请根据实际情况调整）
+            print(f"response: {response}")
             if hasattr(response, 'error') and response.error:
                 raise Exception(f"Supabase操作失败: {response.error}")
         # 写入完成标记
