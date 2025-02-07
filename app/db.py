@@ -704,6 +704,27 @@ async def get_user_bandwidth_detail(query: GetUserBandwidthDetailQuery):
 class GetAccountListQuery(BaseModel):
     gwid: str
 
+
+def get_gw_online_status_by_id(gwid, id):
+    # 在supabase的gw_users表中，查询gwid和id匹配的条款，返回online字段
+    # 如果online字段不是true或者false，统一返回false
+    response = (supabase
+       .table('gw_users')
+       .select("online")
+       .eq("gwid", gwid)
+       .eq("id", id)
+       .execute())
+    if len(response.data) <= 0:
+        return False
+    else:
+        online = response.data[0]["online"]
+        if online == "true":
+            return True
+        elif online == "false":
+            return False
+        else:
+            return False
+
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
     gwid = query.gwid
@@ -750,7 +771,7 @@ async def get_account_list(query: GetAccountListQuery):
                         "macbound": value["macbound"],
                         "changepwd": value["changepwd"],
                         "id": value["id"],
-                        "online": "True"
+                        "online": str(get_gw_online_status_by_id(gwid, value["id"]))
                     }
                     list.append(user)
             luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
