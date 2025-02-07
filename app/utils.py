@@ -18,3 +18,15 @@ def ping(host):
     # Building the command. Ex: "ping -c 1 google.com"
     command = ['ping', param, '1', host]
     return subprocess.call(command) == 0
+
+def upsert_user(user):
+    """
+    将用户列表数据upsert到Supabase的gw_user表
+    """
+    TABLE_NAME = "gw_users"
+    gwid = user["gwid"]
+    id = user["id"]
+    global_id = f"{gwid}_{id}"
+    user["global_id"] = global_id
+    response = supabase.table(TABLE_NAME).upsert(user).execute()
+    return response
