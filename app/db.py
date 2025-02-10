@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from app.utils import get_gateway_by_id
 from app.sdk import SDK
@@ -596,6 +596,30 @@ async def list_config(query: ListConfigQuery):
     finally:
         sdk.logout()
 
+
+
+
+
+@DB.post("/upload_config", tags=["DB"])
+async def upload_config(file: UploadFile = File(...)):
+    # 读取上传的文件内容（异步方式）
+    content = await file.read()
+    # 解析JSON内容
+    try:
+        json_data = json.loads(content)
+        # 兼容处理data
+        if "data" in json_data:
+           json_data = json_data["data"] 
+        # config_list = ["network", "firewall", "wfilter-groups", "wfilter-times", "dhcp", "wfilter-appcontrol", "wfilter-webfilter", "wfilter-exception", "wfilter-imfilter", "wfilter-mailfilter", "wfilter-sslinspect", "wfilter-natdetector", "wfilter-webpush", "wfilter-bwcontrol", "wfilter-ipcontrol", "wfilter-mwan", "wfilter-account", "wfilter-adconf", "wfilter-webauth", "wfilter-pppoe", "wfilter-pptpd", "wfilter-ipsec", "openvpn", "wfilter-webvpn", "wfilter-sdwan", "antiddos", "wfilter-snort", "wfilter-aisecurity"]
+        # 对于config_list中的每一个key,
+        print("Received JSON data:", json_data)
+
+        return {"status": "success", "filename": file.filename}
+    
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON format"}
+
+
 class GetUserBandwidthQuery(BaseModel):
     gwid: str
     user: str
@@ -807,7 +831,7 @@ async def get_stats():
         "device_count": 5
     } }
 
-@DB.post("/test_upsert_user", tags=["DB"])
+@DB.post("/test_upsert_user", tags=["test"])
 async def test_upsert_user():
     fake_user = {
       "gwid": "97935833-c028-4f7b-ad5f-26f296cf935a",
