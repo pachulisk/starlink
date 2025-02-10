@@ -60,7 +60,7 @@ async def read_gateways():
     return response.data
 
 # 创建
-@router.post("/gateways/", tags=["gateway"])
+@router.post("/add_gateway", tags=["gateway"])
 async def create_gateway(gw: Gateway):
     res = supabase.table("gateway").insert({
         "name": gw.name,
