@@ -30,3 +30,32 @@ def upsert_user(user):
     user["global_id"] = global_id
     response = supabase.table(TABLE_NAME).upsert(user).execute()
     return response
+
+def haskv(type, id, key):
+    """
+    判断gw_kv表中是否存在type和id对应的key
+    """
+    TABLE_NAME = "gw_kv"
+    response = supabase.table(TABLE_NAME).select("*").eq("type", type).eq("key", key).eq("id", id).execute()
+    return len(response.data) > 0
+
+def getkv(type, id, key):
+    """
+    获取gw_kv表中type和id对应的key的值
+    """
+    TABLE_NAME = "gw_kv"
+    response = supabase.table(TABLE_NAME).select("*").eq("type", type).eq("key", key).eq("id", id).execute()
+    if len(response.data) > 0:
+        return response.data[0]["value"]
+    return None
+
+def setkv(type, id, key, value):
+    """
+    设置gw_kv表中type和id对应的key的值
+    """
+    TABLE_NAME = "gw_kv"
+    if haskv(type, id, key):
+        response = supabase.table(TABLE_NAME).update({"value": value}).eq("type", type).eq("key", key).eq("id", id).execute()
+    else:
+        response = supabase.table(TABLE_NAME).insert({"type": type, "key": key, "id": id, "value": value}).execute()
+    return response
