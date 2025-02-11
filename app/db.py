@@ -15,7 +15,7 @@ import abc
 import json
 import re
 import luigi
-from .utils import upsert_user
+from .utils import upsert_user, haskv, getkv, setkv
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -850,4 +850,40 @@ async def test_upsert_user():
     }
     # "online": "False"
     response = upsert_user(fake_user)
+    return response
+
+class TestHasKVQuery(BaseModel):
+    type: str
+    id: str
+    key: str
+
+@DB.post("/test_haskv", tags=["test"])
+async def test_haskv(query: TestHasKVQuery):
+    type = query.type
+    id = query.id
+    key = query.key
+    response = haskv(type, id, key)
+    return response
+
+@DB.post("/test_getkv", tags=["test"])
+async def test_getkv(query: TestHasKVQuery):
+    type = query.type
+    id = query.id
+    key = query.key
+    response = getkv(type, id, key)
+    return response
+
+class TestSetKVQuery(BaseModel):
+    type: str
+    id: str
+    key: str
+    value: str
+
+@DB.post("/test_setkv", tags=["test"])
+async def test_setkv(query: TestSetKVQuery):
+    type = query.type
+    id = query.id
+    value = query.value
+    key = query.key
+    response = setkv(type, id, key, value)
     return response
