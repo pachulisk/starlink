@@ -887,3 +887,59 @@ async def test_setkv(query: TestSetKVQuery):
     key = query.key
     response = setkv(type, id, key, value)
     return response
+
+# 对用户进行上线和下线操作
+
+# 传入参数: 
+class UserSessionParam(BaseModel):
+    gwid: str # 网关的id
+    user: str # 用户名称
+    op: str # 操作, up = 上线， down = 下线
+
+# 用户上下线
+async def kill_user(param: UserSessionParam):
+    sdk = SDK()
+    gw = await get_gateway_by_id(param.gwid)
+    if gw is None or len(gw.data) == 0:
+        raise HTTPException(status_code=400, detail="gateway not found")
+    # get gateway username, password and address
+    username = gw.data[0].get('username')
+    password = gw.data[0].get('password')
+    address = gw.data[0].get('address')
+    try:
+        if sdk.login(address, username, password):
+            # 根据op决定type
+            # 如果op是up，则type为REMOVE；如果op是down，则type为ALL
+            type = "REMOVE" if param.op == "up" else "ALL"
+            result = sdk.kill_connection(gw.user, 0, type, "", "")
+            print(result)
+            print(type(result))
+            return result
+        else:
+            raise HTTPException(status_code=401, detail="登录失败")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        sdk.logout()
+
+@DB.post("/update_online_status", tags=["DB"])
+async def update_online_status(param: UserSessionParam):
+    gwid = param.gwid
+    user = param.user
+    op = param.op
+    # 1. 根据gwid，从kv中读取BAN_GROUP这个key的值，用这个值作为group
+    type = "gateway"
+    group = getkv(type, id = gwid, key = "BAN_GROUP")
+    # 2. 如果group为none或者空，则抛出异常
+    if group is None or group == "":
+        raise HTTPException(status_code=400, detail="group not found")
+    # 3. 判断op是up还是down，如果不是up或者down则抛出异常
+    if op != "up" and op != "down":
+        raise HTTPException(status_code=400, detail="op必须是up或者是down")
+    # 4. 如果op是up，则执行上线操作，上线操作是将用户从group中移除；如果op是down，则执行下线操作，下线操作是将用户添加到group中。
+    await kill_user(param)
+    # 5. 更新supabase中的user表中的online字段
+    online = "true" if op == "up" else "false"
+    response = supabase.table('gw_users').update({"online": online}).eq("gwid", gwid).eq("username", user).execute()
+    return response
+    
