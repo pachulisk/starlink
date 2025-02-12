@@ -911,7 +911,7 @@ async def kill_user(param: UserSessionParam):
             # 根据op决定type
             # 如果op是up，则type为REMOVE；如果op是down，则type为ALL
             type = "REMOVE" if param.op == "up" else "ALL"
-            result = sdk.kill_connection(gw.user, 0, type, "", "")
+            result = sdk.kill_connection(param.user, 0, type, "", "")
             print(result)
             print(type(result))
             return result
