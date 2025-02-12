@@ -930,6 +930,7 @@ async def update_online_status(param: UserSessionParam):
     # 1. 根据gwid，从kv中读取BAN_GROUP这个key的值，用这个值作为group
     type = "gateway"
     group = getkv(type, id = gwid, key = "BAN_GROUP")
+    print("update_online_status: gwid={}, user={}, op={}, group={}".format(gwid, user, op, group))
     # 2. 如果group为none或者空，则抛出异常
     if group is None or group == "":
         raise HTTPException(status_code=400, detail="group not found")
