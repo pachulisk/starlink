@@ -898,6 +898,8 @@ class UserSessionParam(BaseModel):
 
 # 用户上下线
 async def kill_user(param: UserSessionParam):
+    # 打印参数
+    print("kill_user param = {}".format(param))
     sdk = SDK()
     gw = await get_gateway_by_id(param.gwid)
     if gw is None or len(gw.data) == 0:
