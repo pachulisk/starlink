@@ -12,6 +12,9 @@ class Gateway(BaseModel):
     username: str | None = None
     port: str | None = None
     address: str | None = None
+    serial_no: str | None = None
+    client_name: str | None = None
+    enable_time: str | None = None
 
 # get one
 @router.get("/gateways/{gwid}", tags=["gateway"])
@@ -30,6 +33,10 @@ async def get_gateway(gwid: str):
             "port": item.get('port'),
             "address": item.get('address'),
             "password": item.get('password'),
+            "serial_no": item.get('serial_no'),
+            "client_name": item.get('client_name'),
+            "enable_time": item.get('enable_time'),
+            "online": item.get('online'),
         })
     return ret
 
@@ -69,6 +76,10 @@ async def create_gateway(gw: Gateway):
         "port": gw.port,
         "password": gw.password,
         "address": gw.address,
+        "serial_no": gw.serial_no,
+        "client_name": gw.client_name,
+        "enable_time": gw.enable_time,
+        "online": "false",
     }).execute()
     return res
 
