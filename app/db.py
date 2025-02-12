@@ -915,7 +915,6 @@ async def kill_user(param: UserSessionParam):
             type = "REMOVE" if param.op == "up" else "ALL"
             result = sdk.kill_connection(param.user, 0, type, "", "")
             print(result)
-            print(type(result))
             return result
         else:
             raise HTTPException(status_code=401, detail="登录失败")
