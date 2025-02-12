@@ -596,28 +596,66 @@ async def list_config(query: ListConfigQuery):
     finally:
         sdk.logout()
 
-
-
-
+def sync_firewall(sdk, firewall_json):
+    """
+    对firewall的json进行同步。下面是可能的配置样式:
+    cfg03dc81": {
+        ".anonymous": true,
+        ".type": "zone",
+        ".name": "cfg03dc81",
+        ".index": 2,
+        "name": "lan",
+        "input": "ACCEPT",
+        "output": "ACCEPT",
+        "forward": "ACCEPT",
+        "network": [
+        "lan1",
+        "lan2"
+        ],
+        "device": [
+        "ppp+",
+        "zt+"
+        ]
+    },
+    """
+    cfgname = "firewall"
+    # 对于firewall这个json对象中的每一个kv进行遍历
+    for key, value in firewall_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+        
 
 @DB.post("/upload_config", tags=["DB"])
-async def upload_config(file: UploadFile = File(...)):
+async def upload_config(gwid: str, file: UploadFile = File(...)):
     # 读取上传的文件内容（异步方式）
     content = await file.read()
-    # 解析JSON内容
+    # 解析JSON内容  
+    gw = await get_gateway_by_id(gwid)
+    if gw is None or len(gw.data) == 0:
+        raise HTTPException(status_code=400, detail="gateway not found")
+    # get gateway username, password and address
+    username = gw.data[0].get('username')
+    password = gw.data[0].get('password')
+    address = gw.data[0].get('address')
+    sdk = SDK()
     try:
         json_data = json.loads(content)
         # 兼容处理data
         if "data" in json_data:
            json_data = json_data["data"] 
-        # config_list = ["network", "firewall", "wfilter-groups", "wfilter-times", "dhcp", "wfilter-appcontrol", "wfilter-webfilter", "wfilter-exception", "wfilter-imfilter", "wfilter-mailfilter", "wfilter-sslinspect", "wfilter-natdetector", "wfilter-webpush", "wfilter-bwcontrol", "wfilter-ipcontrol", "wfilter-mwan", "wfilter-account", "wfilter-adconf", "wfilter-webauth", "wfilter-pppoe", "wfilter-pptpd", "wfilter-ipsec", "openvpn", "wfilter-webvpn", "wfilter-sdwan", "antiddos", "wfilter-snort", "wfilter-aisecurity"]
-        # 对于config_list中的每一个key,
-        print("Received JSON data:", json_data)
-
-        return {"status": "success", "filename": file.filename}
-    
+        if sdk.login(address, username, password):
+            # 1. 同步firewall
+            sync_firewall(sdk, firewall_json=json_data["firewall"])
+            # return { "data": rval }
+        else:
+            raise HTTPException(status_code=401, detail="登录失败")
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        sdk.logout()
 
 
 class GetUserBandwidthQuery(BaseModel):
