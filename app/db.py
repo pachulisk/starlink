@@ -928,11 +928,18 @@ async def get_stats():
         #获取count
         up = r.data[0]["up"]
         down = r.data[0]["down"]
+
+    # 5. 总用户数: 查询supabase中的gw_users_count，获取count字段
+    users_count = 0
+    r = supabase.table("gw_users_count").select("count").execute()
+    if len(r.data) > 0:
+        #获取count
+        users_count = r.data[0]["count"]
     return { "data": {
             "gateway_count": gateway_count,
             "client_count": client_count,
             "fleet_count": fleet_count,
-            "user_count": 3, # todo
+            "user_count": users_count,
             "total_traffic": up+down
         } }
 
