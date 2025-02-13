@@ -42,6 +42,43 @@ async def get_gateway(gwid: str):
         })
     return ret
 
+def get_total_traffic_by_gwid(gwid: str):
+    """
+    输入网关的gwid，获取网关的上行流量和下行流量，单位是bytes
+    """
+    # 查询supabase的total_traffic_by_gwid表，查询up, down两个字段
+    response = supabase.table("total_traffic_by_gwid").select("up, down").eq("gwid", gwid).execute()
+    if response.data:
+        up = response.data[0]["up"]
+        down = response.data[0]["down"]
+        return [up, down]
+    else:
+        return [0, 0]
+    
+# 根据gwid查询设备数量
+def get_device_by_gwid(gwid: str):
+    """
+    输入网关的gwid，获取网关的设备数量
+    """
+    # 查询supabase的device_count_group_by_gwid表，查询count(*)
+    response = supabase.table("device_count_group_by_gwid").select("down").eq("gwid", gwid).execute()
+    if response.data:
+        return response.data[0]["down"]
+    else:
+        return 0
+
+# 根据gwid查询用户数量
+def get_users_count_by_gwid(gwid: str):
+    """
+    输入网关的gwid，获取网关的用户数量
+    """
+    # 查询supabase的gw_user_count_group_by_gwid表，查询count(*)
+    response = supabase.table("gw_user_count_group_by_gwid").select("count").eq("gwid", gwid).execute()
+    if response.data:
+        return response.data[0]["count"]
+    else:
+        return 0
+
 # 列表
 @router.get("/gateways/", tags=["gateway"])
 async def read_gateways():
@@ -66,6 +103,29 @@ async def read_gateways():
       "count": null
     }
     """
+    list = []
+    for item in response.data:
+        gwid = item["id"]
+        trafffic = get_total_traffic_by_gwid(gwid)
+        total_traffic = trafffic[0] + trafffic[1]
+        device_count = get_device_by_gwid(gwid)
+        user_count = get_users_count_by_gwid(gwid)
+        list.append({
+            "id": item.get('id'),
+            "name": item.get('name'),
+            "username": item.get('username'),
+            "port": item.get('port'),
+            "address": item.get('address'),
+            "password": item.get('password'),
+            "serial_no": item.get('serial_no'),
+            "client_name": item.get('client_name'),
+            "enable_time": item.get('enable_time'),
+            "online": item.get('online'),
+            "fleet": item.get('fleet'), 
+            "total_traffic": total_traffic, # 网关流量
+            "device_count": device_count, # 网关设备数
+            "user_count": user_count, # 网关用户数
+        })        
     return response.data
 
 # 创建
