@@ -126,7 +126,7 @@ async def read_gateways():
             "device_count": device_count, # 网关设备数
             "user_count": user_count, # 网关用户数
         })        
-    return response.data
+    return list
 
 # 创建
 @router.post("/add_gateway", tags=["gateway"])
