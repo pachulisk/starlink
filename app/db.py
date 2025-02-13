@@ -863,11 +863,31 @@ async def get_account_list(query: GetAccountListQuery):
 
 @DB.post("/get_stats", tags=["DB"])
 async def get_stats():
+    # 1. 查询supabase的gateway_count表，获取count值
+    r = supabase.table("gateway_count").select("count").execute()
+    gateway_count = 0
+    if len(r.data) > 0:
+        #获取count
+        gateway_count = r.data[0]["count"]
+    # 2. 查询supabase中的client_count，获取客户数量count值
+    r = supabase.table("client_count").select("count").execute()
+    client_count = 0
+    if len(r.data) > 0:
+        #获取count
+        client_count = r.data[0]["count"]
+    # 3. 查询supabase中的fleet_count，获取舰船数量count值
+    r = supabase.table("fleet_count").select("count").execute()
+    fleet_count = 0
+    if len(r.data) > 0:
+        #获取count
+        fleet_count = r.data[0]["count"]
     return { "data": {
-        "gateway_count": 1,
-        "user_count": 24,
-        "device_count": 5
-    } }
+            "gateway_count": gateway_count,
+            "client_count": client_count,
+            "fleet_count": fleet_count,
+            "user_count": 3, # todo
+            "device_count": 15 # todo
+        } }
 
 @DB.post("/test_upsert_user", tags=["test"])
 async def test_upsert_user():
