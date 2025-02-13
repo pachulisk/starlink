@@ -881,12 +881,21 @@ async def get_stats():
     if len(r.data) > 0:
         #获取count
         fleet_count = r.data[0]["count"]
+    
+    # 4. 总流量:查询supabase中的total_traffic，获取up和down字段
+    r = supabase.table("total_traffic").select("up, down").execute()
+    up = 0
+    down = 0
+    if len(r.data) > 0:
+        #获取count
+        up = r.data[0]["up"]
+        down = r.data[0]["down"]
     return { "data": {
             "gateway_count": gateway_count,
             "client_count": client_count,
             "fleet_count": fleet_count,
             "user_count": 3, # todo
-            "device_count": 15 # todo
+            "total_traffic": up+down
         } }
 
 @DB.post("/test_upsert_user", tags=["test"])
