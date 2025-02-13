@@ -9,7 +9,7 @@ import time
 import urllib.parse
 import calendar
 from .celery_app import perform_task_celery, add
-from .tasks.sync_user import UpsertUsersToSupabase
+from .tasks.sync_user import UpsertUsersToSupabase, UpsertDeviceToSupabase
 import urllib.parse
 import abc
 import json
@@ -788,6 +788,44 @@ def get_gw_online_status_by_id(gwid, id):
             return False
         else:
             return False
+
+@DB.post("/get_device_list", tags=["DB"])
+async def get_device_list(query: GetAccountListQuery):
+    gwid = query.gwid
+    gw = await get_gateway_by_id(gwid)
+    if gw is None or len(gw.data) == 0:
+        raise HTTPException(status_code=400, detail="gateway not found")
+    # get gateway username, password and address
+    username = gw.data[0].get('username')
+    password = gw.data[0].get('password')
+    address = gw.data[0].get('address')
+    sdk = SDK()
+    try:
+        if sdk.login(address, username, password):
+            r = sdk.list_online_users(1000, "")
+            r = get_basic_rpc_result(r)
+            r = str_strip(r["result"])
+            print(r)
+            r = json.loads(r)
+            r = r["result"]
+            list = []
+            for item in r:
+                device = {}
+                device["ip"] = item["ip"]
+                device["macaddr"] = item["mac"]
+                device["group"] = item["group"]
+                device["up"] = item["up"]
+                device["down"] = item["down"]
+                device["gwid"] = gwid
+                list.append(device)
+            luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
+            return { "data": list }
+        else:
+            raise HTTPException(status_code=401, detail="登录失败")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        sdk.logout()
 
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
