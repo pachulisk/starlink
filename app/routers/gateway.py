@@ -47,7 +47,7 @@ def get_total_traffic_by_gwid(gwid: str):
     输入网关的gwid，获取网关的上行流量和下行流量，单位是bytes
     """
     # 查询supabase的total_traffic_by_gwid表，查询up, down两个字段
-    response = supabase.table("total_traffic_by_gwid").select("up, down").eq("gwid", gwid).execute()
+    response = supabase.table("total_traffic_group_by_gwid").select("up, down").eq("gwid", gwid).execute()
     if response.data:
         up = response.data[0]["up"]
         down = response.data[0]["down"]
