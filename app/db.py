@@ -895,8 +895,19 @@ async def get_account_list(query: GetAccountListQuery):
             # datelimit
             # 2.1 从supabase的user_traffic_view中获取用户流量信息
             r = supabase.table("user_traffic_view").select("*").execute()
+            data = []
+            for item in r.data:
+                # 2.2 遍历r.data，将r.data中的数据转换为list
+                data.append({
+                    "gateway_name": item["gateway_name"],
+                    "username": item["username"],
+                    "total_traffic": item["uptraffic"] + item["downtraffic"],
+                    "group": item["group"],
+                    "online": item["online"],
+                    "datelimit": item["datelimit"],
+                })
             # 2.2 将r.data返回
-            return { "data": r.data }
+            return { "data": data }
         else:
             raise HTTPException(status_code=401, detail="登录失败")
     except Exception as e:
