@@ -862,6 +862,8 @@ async def get_account_list(query: GetAccountListQuery):
             #     account = urllib.parse.quote_plus(account)
             #     kv[account] = True
 
+            # 1. 遍历list_account的结果，将结果转换为list
+            list = []   
             for _, value in p.items():
                 if value[".type"] == "wfuser":
                     user = {
