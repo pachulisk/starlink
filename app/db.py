@@ -1037,6 +1037,12 @@ async def kill_user(param: UserSessionParam):
 
 @DB.post("/update_online_status", tags=["DB"])
 async def update_online_status(param: UserSessionParam):
+    """
+    用户上线下线
+    参数1： gwid=当前网关id，必须
+    参数2: user=用户名，必须，例如user1
+    参数3：op=操作，必须，枚举值up=上线，down=下线，其他值报错
+    """
     gwid = param.gwid
     user = param.user
     op = param.op
