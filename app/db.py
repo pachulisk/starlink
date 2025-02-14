@@ -536,7 +536,7 @@ class GetAccountListQuery(BaseModel):
     gwid: str
 
 @DB.post("/sync_account_list", tags=["DB"])
-async def get_account_list(query: GetAccountListQuery):
+async def sync_account_list(query: GetAccountListQuery):
     gwid = query.gwid
     gw = await get_gateway_by_id(gwid)
     if gw is None or len(gw.data) == 0:
@@ -829,6 +829,12 @@ async def get_device_list(query: GetAccountListQuery):
 
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
+    """
+    POST /get_account_list获取用户列表
+    参数1： gwid=当前网关id，必须
+    """
+
+    # 1. 获取gwid
     gwid = query.gwid
     gw = await get_gateway_by_id(gwid)
     if gw is None or len(gw.data) == 0:
@@ -844,19 +850,18 @@ async def get_account_list(query: GetAccountListQuery):
             p = get_basic_rpc_result(p)
             p = p["values"]
 
-            r = sdk.list_online_users(1000, "")
-            r = get_basic_rpc_result(r)
-            r = str_strip(r["result"])
-            print(r)
-            r = json.loads(r)
-            r = r["result"]
-            kv = {}
-            for u in r:
-                account = u["account"]
-                account = urllib.parse.quote_plus(account)
-                kv[account] = True
+            # r = sdk.list_online_users(1000, "")
+            # r = get_basic_rpc_result(r)
+            # r = str_strip(r["result"])
+            # print(r)
+            # r = json.loads(r)
+            # r = r["result"]
+            # kv = {}
+            # for u in r:
+            #     account = u["account"]
+            #     account = urllib.parse.quote_plus(account)
+            #     kv[account] = True
 
-            list = []
             for _, value in p.items():
                 if value[".type"] == "wfuser":
                     user = {
@@ -873,25 +878,23 @@ async def get_account_list(query: GetAccountListQuery):
                         "macbound": value["macbound"],
                         "changepwd": value["changepwd"],
                         "id": value["id"],
-                        "online": str(get_gw_online_status_by_id(gwid, value["id"]))
+                        # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
                     }
                     list.append(user)
+            # 1.1 将list_account获取的信息，通过luigi任务同步到supabase
             luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
-            # for user in list:
-            #     if "online" in user:
-            #         #删除online字段
-            #         del user["online"]
-            #     # 执行upsert操作
-            #     # logger.info(f"upsert user: {user}")
-            #     print(f"upsert user: {user}")
-            #     response = upsert_user(user)
-            #     print(f"response: {response}")
-            #     # response = supabase.table("gw_users").upsert(user).execute()
-            #     # 检查错误（supabase-python的响应结构可能不同，请根据实际情况调整）
-            #     # logger.info(f"response: {response}")
-            #     if hasattr(response, 'error') and response.error:
-            #         raise Exception(f"Supabase操作失败: {response.error}")
-            return { "data": list }
+            # 2. 通过supabase的user_traffic_view读取用户流量信息，包括下列字段:
+            # gateway_name
+            # username
+            # uptraffic
+            # downtraffic
+            # group
+            # online
+            # datelimit
+            # 2.1 从supabase的user_traffic_view中获取用户流量信息
+            r = supabase.table("user_traffic_view").select("*").execute()
+            # 2.2 将r.data返回
+            return { "data": r.data }
         else:
             raise HTTPException(status_code=401, detail="登录失败")
     except Exception as e:
@@ -1042,6 +1045,9 @@ async def update_online_status(param: UserSessionParam):
     参数1： gwid=当前网关id，必须
     参数2: user=用户名，必须，例如user1
     参数3：op=操作，必须，枚举值up=上线，down=下线，其他值报错
+    返回值: 
+    data: 用户的列表，其中每一项显示信息包括: 
+    online: 是否在线，true为在线，false为不在线（在线状态更新)
     """
     gwid = param.gwid
     user = param.user
