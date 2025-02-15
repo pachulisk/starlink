@@ -40,6 +40,7 @@ async def get_gateway_by_id(gwid: str):
 def is_url(url):
     try:
         result = urlparse(url)
+        print("result = " + str(result) + "")
         print("netloc = " + result.netloc + "")
         return is_valid_netloc(result.netloc)
     except Exception as e:
