@@ -109,8 +109,10 @@ async def add_user(param: AddUserParam):
               # "id": username
           }
           # 调用sdk
-          sdk.config_add(cfgname, type, key, value)
-          sdk.config_apply()
+          result1 = sdk.config_add(cfgname, type, key, value)
+          print("result1 = " + str(result1))
+          result2 = sdk.config_apply()
+          print("result2 = " + str(result2))
           return {"data": value}
         else:
           raise HTTPException(status_code=401, detail="登录失败")
