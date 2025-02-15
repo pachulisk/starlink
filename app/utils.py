@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from app.supabase import supabase
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
@@ -6,12 +7,20 @@ async def get_gateway_by_id(gwid: str):
     response = supabase.table("gateway").select("*").eq("id", gwid).execute()
     return response
 
+def is_url(url):
+    try:
+        _ = urlparse(url)
+    except Exception as e:
+        return False
+    return True
 
 def ping(host):
     """
     Returns True if host (str) responds to a ping request.
     Remember that a host may not respond to a ping (ICMP) request even if the host name is valid.
     """
+    if is_url(host) is False:
+        return False
     # Option for the number of packets as a function of
     param = '-n' if platform.system().lower()=='windows' else '-c'
 
