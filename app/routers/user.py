@@ -113,6 +113,7 @@ async def add_user(param: AddUserParam):
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}
     except Exception as e:
+        print("error: " + str(e))
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         sdk.logout()
