@@ -89,27 +89,30 @@ async def add_user(param: AddUserParam):
         # type = ‘wfuser’
         # key = ‘username’
         # value = {”username=user1”, “password=<pswdxxx>”, “remark=ISP-1-bandwidth1733974887482”,  “pppoe=false”, “webauth=true”, “static=false”, “staticip= “, datelimit=”2034-10-01”, group=”0”, logins=”0”, macbounds=”0”, changepwd=”false”, id=xxx}
-        cfgname = 'wfilter-account'
-        type = 'wfuser'
-        key = username
-        value = {
-            "username": username,
-            "password": password,
-            # "remark": "ISP-1-bandwidth1733974887482",
-            "pppoe": "false",
-            "webauth": "true",
-            "static": "false",
-            "staticip": " ",
-            "datelimit": datelimit,
-            "group": group,
-            "logins": "0",
-            "macbound": "0",
-            "changepwd": "false",
-            # "id": username
-        }
-        # 调用sdk
-        sdk.config_add(cfgname, type, key, value)
-        return {"data": value}
+        if sdk.login(address, username, password):
+          cfgname = 'wfilter-account'
+          type = 'wfuser'
+          key = username
+          value = {
+              "username": username,
+              "password": password,
+              # "remark": "ISP-1-bandwidth1733974887482",
+              "pppoe": "false",
+              "webauth": "true",
+              "static": "false",
+              "staticip": " ",
+              "datelimit": datelimit,
+              "group": group,
+              "logins": "0",
+              "macbound": "0",
+              "changepwd": "false",
+              # "id": username
+          }
+          # 调用sdk
+          sdk.config_add(cfgname, type, key, value)
+          return {"data": value}
+        else:
+          raise HTTPException(status_code=401, detail="登录失败")
     except json.JSONDecodeError:
         return {"error": "Invalid JSON format"}
     except Exception as e:
