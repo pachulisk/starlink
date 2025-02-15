@@ -3,8 +3,16 @@ from fastapi import APIRouter
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
+from ..utils import ping
 
 router = APIRouter()
+
+def is_online(ip):
+    # 如果可以ping通，返回"online", 否则返回"offline"
+    if ping(ip):
+        return "online"
+    else:
+        return "offline"
 
 class Gateway(BaseModel):
     name: str
@@ -37,7 +45,7 @@ async def get_gateway(gwid: str):
             "serial_no": item.get('serial_no'),
             "client_name": item.get('client_name'),
             "enable_time": item.get('enable_time'),
-            "online": item.get('online'),
+            "online": is_online(item.get('address')),
             "fleet": item.get('fleet'),
         })
     return ret
@@ -120,7 +128,7 @@ async def read_gateways():
             "serial_no": item.get('serial_no'),
             "client_name": item.get('client_name'),
             "enable_time": item.get('enable_time'),
-            "online": item.get('online'),
+            "online": is_online(item.get('address')),
             "fleet": item.get('fleet'), 
             "total_traffic": total_traffic, # 网关流量
             "device_count": device_count, # 网关设备数
