@@ -132,8 +132,8 @@ class AddUserRequest(BaseModel):
     from_source: str
     expire: int
 
-@app.post("/add_user")
-async def add_user(request: AddUserRequest):
+@app.post("/add_user_binding")
+async def add_user_binding(request: AddUserRequest):
     gwid = request.gwid
     gw = await get_gateway_by_id(gwid)
     if gw is None or len(gw.data) == 0:
