@@ -2,6 +2,36 @@ from urllib.parse import urlparse
 from app.supabase import supabase
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
+import re
+import ipaddress
+
+def is_valid_ipv4(ip):
+    """
+    判断输入的字符串是否为合法的 IPv4 地址
+    """
+    try:
+        ipaddress.IPv4Address(ip)
+        return True
+    except ValueError:
+        return False
+    
+def is_valid_domain(domain):
+    """
+    判断输入的字符串是否为合法的域名
+    """
+    pattern = re.compile(
+        r'^(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)$',
+        re.IGNORECASE
+    )
+    return bool(pattern.match(domain))
+
+def is_valid_netloc(netloc):
+    """
+    判断输入的 netloc 是否为合法的 IPv4 地址或者网址
+    """
+    # 处理可能包含端口号的情况
+    netloc = netloc.split(':')[0]
+    return is_valid_ipv4(netloc) or is_valid_domain(netloc)
 
 async def get_gateway_by_id(gwid: str):
     response = supabase.table("gateway").select("*").eq("id", gwid).execute()
@@ -10,7 +40,7 @@ async def get_gateway_by_id(gwid: str):
 def is_url(url):
     try:
         result = urlparse(url)
-        return all([result.scheme, result.netloc])
+        return is_valid_netloc(result.netloc)
     except Exception as e:
         return False
 
