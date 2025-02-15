@@ -5,7 +5,7 @@ from ..utils import get_gateway_by_id
 from pydantic import BaseModel
 import json
 
-app = APIRouter()
+user = APIRouter()
 
 class AddUserParam(BaseModel):
     gwid: str
@@ -22,7 +22,7 @@ def check_username_exists(gwid: str, username: str):
     return response.data is not None and len(response.data) > 0
     
 
-@app.post("/add_user", tags=["user"])
+@user.post("/add_user", tags=["user"])
 async def add_user(param: AddUserParam):
     """
     调用sdk添加用户

@@ -10,6 +10,7 @@ from .routers import auth
 from . import db, task
 from .routers import auth2
 from .routers import account, weather
+from .routers import user
 from .utils import get_gateway_by_id
 
 # 加载.env 文件
@@ -37,6 +38,7 @@ app.include_router(account.account)
 app.include_router(task.task)
 app.include_router(weather.weather)
 app.include_router(auth2.auth2)
+app.include_router(user.user)
 
 
 class ListVirtualGroupRequest(BaseModel):
