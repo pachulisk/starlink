@@ -51,13 +51,12 @@ async def add_user(param: AddUserParam):
     },
     """
     gwid = param.gwid
-    username = param.username
     password = param.password
     group = param.group
     datelimit = param.datelimit
     confirm_password = param.confirm_password
     # 0. 检查用户名是否为空
-    if username == "":
+    if param.username == "":
         raise HTTPException(status_code=400, detail="用户名不能为空")
     # 1. 检查用户名是否已经存在
     if check_username_exists(gwid, param.username):
@@ -92,11 +91,14 @@ async def add_user(param: AddUserParam):
         if sdk.login(address, username, password):
           cfgname = 'wfilter-account'
           type = 'wfuser'
-          key = username
+          key = param.username
           value = {
-              "username": username,
-              "password": password,
-              # "remark": "ISP-1-bandwidth1733974887482",
+              "id": key,
+              ".anonymous": False,
+              ".type": "wfuser",
+              "username": param.username,
+              "password": param.password,
+              "remark": "ISP-1-bandwidth"+key,
               "pppoe": "false",
               "webauth": "true",
               "static": "false",
@@ -106,7 +108,6 @@ async def add_user(param: AddUserParam):
               "logins": "0",
               "macbound": "0",
               "changepwd": "false",
-              # "id": username
           }
           # 调用sdk
           result1 = sdk.config_add(cfgname, type, key, value)
