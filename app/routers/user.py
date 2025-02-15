@@ -110,6 +110,7 @@ async def add_user(param: AddUserParam):
           }
           # 调用sdk
           sdk.config_add(cfgname, type, key, value)
+          sdk.config_apply()
           return {"data": value}
         else:
           raise HTTPException(status_code=401, detail="登录失败")
