@@ -15,7 +15,7 @@ import abc
 import json
 import re
 import luigi
-from .utils import upsert_user, haskv, getkv, setkv
+from .utils import ping, upsert_user, haskv, getkv, setkv
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1082,3 +1082,12 @@ async def update_online_status(param: UserSessionParam):
     response = supabase.table('gw_users').update({"online": online}).eq("gwid", gwid).eq("username", user).execute()
     return response
     
+class TestPingQuery(BaseModel):
+    server: str
+
+# 测试ping服务器
+@DB.post("/test_ping", tags=["test"])
+async def test_ping(query: TestPingQuery):
+    server = query.server
+    response = ping(server)
+    return response
