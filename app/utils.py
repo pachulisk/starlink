@@ -9,10 +9,10 @@ async def get_gateway_by_id(gwid: str):
 
 def is_url(url):
     try:
-        _ = urlparse(url)
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
     except Exception as e:
         return False
-    return True
 
 def ping(host):
     """
