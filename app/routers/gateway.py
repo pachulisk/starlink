@@ -162,7 +162,7 @@ async def delete_gateway(gwid: str):
     return res
 
 # 更新
-@router.patch("/gateways/{gwid}", response_model=Gateway, tags=["gateway"])
+@router.patch("/gateways/{gwid}", tags=["gateway"])
 async def update_gateway(gwid: str, gw: Gateway):
     print("== start update gateway, gwid = ", gwid)
     update_gw_encoded = jsonable_encoder(gw)
@@ -171,7 +171,7 @@ async def update_gateway(gwid: str, gw: Gateway):
     return res
     
 # creation
-@router.put("gateways", response_model=Gateway, tags=["gateway"])
+@router.put("gateways", tags=["gateway"])
 async def create_gateway(gw: Gateway):
     gw_json = jsonable_encoder(gw)
     res = supabase.table('gateway').insert(gw_json).execute()
