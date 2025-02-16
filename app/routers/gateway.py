@@ -164,8 +164,9 @@ async def delete_gateway(gwid: str):
 # 更新
 @router.patch("/gateways/{gwid}", response_model=Gateway, tags=["gateway"])
 async def update_gateway(gwid: str, gw: Gateway):
+    print("== start update gateway, gwid = ", gwid)
     update_gw_encoded = jsonable_encoder(gw)
-    print(update_gw_encoded)
+    print("== update_gw_encoded: ", update_gw_encoded)
     res = supabase.table('gateway').update(update_gw_encoded).eq('id', gwid).execute()
     return res
     
