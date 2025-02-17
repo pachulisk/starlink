@@ -107,10 +107,10 @@ def setkv(type, id, key, value):
     return response
 
 @contextmanager
-async def gw_login(gwid:str):
+def gw_login(gwid:str):
     print("==gw_login")
     try:
-        gw = await get_gateway_by_id(gwid)
+        gw = supabase.table("gateway").select("*").eq("id", gwid).execute()
         if gw is None or len(gw.data) == 0:
             raise HTTPException(status_code=400, detail="gateway not found")
         # get gateway username, password and address
