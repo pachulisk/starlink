@@ -884,6 +884,7 @@ async def get_account_list(query: GetAccountListQuery):
                     }
                     list.append(user)
             # 1.1 将list_account获取的信息，通过luigi任务同步到supabase
+            print("====start build luigi, list = " + json.dumps(list))
             luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
             # 2. 通过supabase的user_traffic_view读取用户流量信息，包括下列字段:
             # gateway_name
