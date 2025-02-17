@@ -866,13 +866,13 @@ async def get_account_list(query: GetAccountListQuery):
 
             # 1. 遍历list_account的结果，将结果转换为list
             list = []   
-            for _, value in p.items():
-                if value[".type"] == "wfuser":
+            for key, value in p.items():
+                if value[".type"] == "wfuser" and key != "admin":
                     print("====list_account, value = ", str(value))
                     user = {
                         "gwid": gwid,
                         "username": value["username"],
-                        # "remark": value["remark"],
+                        "remark": value.get("remark") or "",
                         "pppoe": value["pppoe"],
                         "webauth": value["webauth"],
                         "static": value["static"],
@@ -882,7 +882,7 @@ async def get_account_list(query: GetAccountListQuery):
                         "logins": value["logins"],
                         "macbound": value["macbound"],
                         "changepwd": value["changepwd"],
-                        "id": value["id"]
+                        "id": value.get("id") or "",
                         # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
                     }
                     list.append(user)
