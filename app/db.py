@@ -871,7 +871,7 @@ async def get_account_list(query: GetAccountListQuery):
                     user = {
                         "gwid": gwid,
                         "username": value["username"],
-                        "remark": value["remark"],
+                        # "remark": value["remark"],
                         "pppoe": value["pppoe"],
                         "webauth": value["webauth"],
                         "static": value["static"],
@@ -881,7 +881,7 @@ async def get_account_list(query: GetAccountListQuery):
                         "logins": value["logins"],
                         "macbound": value["macbound"],
                         "changepwd": value["changepwd"],
-                        "id": value["id"],
+                        "id": value["id"]
                         # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
                     }
                     list.append(user)
