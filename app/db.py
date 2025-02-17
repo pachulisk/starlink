@@ -868,6 +868,7 @@ async def get_account_list(query: GetAccountListQuery):
             list = []   
             for _, value in p.items():
                 if value[".type"] == "wfuser":
+                    print("====list_account, value = ", str(value))
                     user = {
                         "gwid": gwid,
                         "username": value["username"],
