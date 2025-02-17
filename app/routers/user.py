@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.supabase import supabase
 from ..sdk import SDK
-from ..utils import get_gateway_by_id
+from ..utils import get_gateway_by_id, gw_login
 from pydantic import BaseModel
 import json
 
@@ -20,7 +20,26 @@ class AddUserParam(BaseModel):
 def check_username_exists(gwid: str, username: str):
     response = supabase.table('gw_users').select('*').eq('gwid', gwid).eq('username', username).execute()
     return response.data is not None and len(response.data) > 0
+
+# 通过gwid、用户名username来检查用户的id
+def get_user_id_by_gwid_username(gwid: str, username: str):
+    response = supabase.table('gw_users').select('id').eq('gwid', gwid).eq('username', username).execute()
+    if response.data:
+        return response.data[0]['id']
+    else:
+        return None
+
+def get_user_info_by_gwid_username(gwid: str, username: str):
+    response = supabase.table('gw_users').select('*').eq('gwid', gwid).eq('username', username).execute()
+    if response.data:
+        return response.data[0]
+    else:
+        return None
     
+# 在supabase中，通过gwid、username来标记用户的状态为已删除
+def mark_user_as_deleted(gwid: str, username: str):
+    response = supabase.table('gw_users').update({'delete_mark': "true"}).eq('gwid', gwid).eq('username', username).execute()
+    return response.data is not None and len(response.data) > 0
 
 @user.post("/add_user", tags=["user"])
 async def add_user(param: AddUserParam):
@@ -124,3 +143,59 @@ async def add_user(param: AddUserParam):
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         sdk.logout()
+
+class DeleteUserParam(BaseModel):
+    gwid: str
+    username: str
+
+@user.post("/delete_user", tags=["user"])
+async def delete_user(param: DeleteUserParam):
+    """
+    调用sdk删除用户
+    """
+    # 思路:在wfilter-account配置项中删除用户
+    # 典型用户为
+    """
+    "wfuser17339749341670": {
+      ".anonymous": false,
+      ".type": "wfuser",
+      ".name": "wfuser17339749341670",
+      ".index": 5,
+      "username": "user1",
+      "password": "<#254ef761e0fe2110#>",
+      "remark": "ISP-1-bandwidth1733974887482",
+      "pppoe": "false",
+      "webauth": "true",
+      "static": "false",
+      "staticip": " ",
+      "datelimit": "2034-10-01",
+      "group": "0",
+      "logins": "0",
+      "macbound": "0",
+      "changepwd": "false",
+      "id": "wfuser17339749341670"
+    },
+    """
+    # 0. 检查gwid和username是否为空
+    if param.gwid == "" or param.username == "":
+        raise HTTPException(status_code=400, detail="gwid和username不能为空")
+    # 1. 检查用户名是否已经存在
+    if not check_username_exists(param.gwid, param.username):
+        raise HTTPException(status_code=400, detail="用户名不存在")
+    # 2. 登陆sdk
+    gwid = param.gwid
+    with gw_login(gwid) as sdk_obj:
+        user_info = get_user_info_by_gwid_username(gwid, param.username)
+        if sdk_obj is None:
+            raise HTTPException(status_code=400, detail="登录失败")
+        # 3. 调用sdk.config_del删除相关内容
+        cfgname = "wfilter-account"
+        id = get_user_id_by_gwid_username(gwid, param.username)
+        result1 = sdk_obj.config_del(cfgname, id)
+        print("result1 = " + str(result1))
+        # 4. 调用sdk.config_apply实现修改
+        result2 = sdk_obj.config_apply()
+        print("result2 = " + str(result2))
+        # 5. 在supabase的gw_users表中，将username,id相关匹配到的行的删除标记置为true
+        mark_user_as_deleted(gwid, param.username)
+        return {"data": user_info}
