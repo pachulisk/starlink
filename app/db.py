@@ -827,6 +827,11 @@ async def get_device_list(query: GetAccountListQuery):
     finally:
         sdk.logout()
 
+def get_total_traffic(item):
+    up = item.get("uptraffic") or 0.0
+    down = item.get("downtraffic") or 0.0
+    return up + down
+
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
     """
@@ -905,7 +910,7 @@ async def get_account_list(query: GetAccountListQuery):
                 data.append({
                     "gateway_name": item["gateway_name"],
                     "username": item["username"],
-                    "total_traffic": item["uptraffic"] + item["downtraffic"],
+                    "total_traffic": get_total_traffic(item),
                     "group": item["group"],
                     "online": item["online"],
                     "datelimit": item["datelimit"],
