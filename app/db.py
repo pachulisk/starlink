@@ -847,6 +847,7 @@ async def get_account_list(query: GetAccountListQuery):
     try:
         if sdk.login(address, username, password):
             p = sdk.list_account()
+            print("====list_account, p = " + str(p))
             p = get_basic_rpc_result(p)
             p = p["values"]
 
@@ -912,6 +913,7 @@ async def get_account_list(query: GetAccountListQuery):
         else:
             raise HTTPException(status_code=401, detail="登录失败")
     except Exception as e:
+        print("====get_account_list error, error = " + str(e))
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         sdk.logout()
