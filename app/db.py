@@ -849,8 +849,9 @@ async def get_account_list(query: GetAccountListQuery):
             p = sdk.list_account()
             print("====list_account, p = " + str(p))
             p = get_basic_rpc_result(p)
+            print("====list_account, get_basic_rpc_result p = ", str(p))
             p = p["values"]
-
+            print("====list_account, value p = ", str(p))
             # r = sdk.list_online_users(1000, "")
             # r = get_basic_rpc_result(r)
             # r = str_strip(r["result"])
