@@ -107,7 +107,7 @@ def setkv(type, id, key, value):
     return response
 
 @contextmanager
-async def gw_login(gwid):
+async def gw_login(gwid:str):
     print("==gw_login")
     try:
         gw = await get_gateway_by_id(gwid)
