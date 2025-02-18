@@ -5,7 +5,7 @@ from app.sdk import SDK
 from app.supabase import supabase, get_supabase_table_latest_row, build_sql_for_latest_row, get_db_for_table, meta_for_table_name, formalize_supabase_datetime, build_dict_from_line, to_date, str_strip
 from .task import post_single_task
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import time
 import urllib.parse
 import calendar
@@ -287,7 +287,7 @@ async def post_sync_tasks(query: PostSyncTasks):
 class SyncTrafficParam(BaseModel):
     gwid: str
 
-@DB.post("/sync_traffics", tags=["traffic"])
+@DB.post("/sync_traffics", tags=["traffic"], timeout=timedelta(seconds=200000))
 async def sync_traffics(query: SyncTrafficParam):
     """
     将hourreport, acctreport两张表的内容，从db中同步到supabase的同名表中。
