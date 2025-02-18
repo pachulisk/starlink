@@ -117,3 +117,40 @@ async def get_gw_traffic(query: GetGWTrafficParam):
                 "happendate": to_date(d["happendate"])
             })
         return {"data": get_data_with_format(list, format)}
+
+@traffic.post("/get_user_traffic", tags=["traffic"])
+async def get_user_traffic(query: GetGWTrafficParam):
+    # 1. 获取gwid, user和日期date
+    # 2. 如果date为空，则默认查询时间设置为本年本月；否则按照date查询
+    # 3. 从supabase查询acctreport表，筛选日期在date的月份范围内
+    gwid = query.gwid
+    start_date = query.start_date
+    end_date = query.end_date
+    times = calculate_start_and_end_str(start_date, end_date)
+    start_time_str = times[0]
+    end_time_str = times[1]
+    format = query.format
+    
+    response = (supabase
+        .table('acctreport')
+        .select("*")
+        .eq("gwid", gwid)
+        .gte("happendate", start_time_str)
+        .lte("happendate", end_time_str)
+        .execute())
+    # 4. 归集结果
+    if len(response.data) <= 0:
+        return {"data": get_data_with_format([], format)}
+    else:
+        list = []
+        for d in response.data:
+            up = d["uptraffic"]
+            down = d["downtraffic"]
+            list.append({
+                "acct": d["acct"],
+                "up": up,
+                "down": down,
+                "total": f"{float(up) + float(down)}",
+                "happendate": to_date(d["happendate"])
+            })
+        return {"data": get_data_with_format(list, format)}
