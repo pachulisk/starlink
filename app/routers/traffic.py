@@ -132,7 +132,7 @@ async def get_user_traffic(query: GetGWTrafficParam):
     format = query.format
     
     response = (supabase
-        .table('acctreport')
+        .table('acctreport_view')
         .select("*")
         .eq("gwid", gwid)
         .gte("happendate", start_time_str)
