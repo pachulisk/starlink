@@ -13,3 +13,4 @@ fastapi-jwt-auth[asymmetric]
 python-dotenv
 chromadb
 luigi
+pandas

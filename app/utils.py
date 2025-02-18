@@ -6,6 +6,8 @@ import re
 import ipaddress
 from fastapi import HTTPException
 from .sdk import SDK
+from datetime import datetime, date
+import calendar
 
 from contextlib import contextmanager
 
@@ -126,3 +128,43 @@ def gw_login(gwid:str):
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         sdk.logout()
+
+def get_date_obj_from_str(s):
+    # 处理yyyy-mm-dd的情况
+    regex1 = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+    regex = re.compile(r'^\d{4}-\d{2}$')
+    if regex1.match(s):
+        c = s.split('-')
+        return datetime(int(c[0]), int(c[1]), int(c[2])).date()
+    elif regex.match(s):
+        # 处理yyyy-mm的情况
+        c = s.split('-')
+        return datetime(int(c[0]), int(c[1]), 1).date()
+    else:
+        # 其他情况:返回今天的日期
+        return date.today()
+    
+def get_start_of_month(d, hrs=True):
+    date_str = f"{d.strftime('%Y-%m')}-01"
+    if hrs is True:
+        return f"{date_str} 00:00:00"
+    else:
+        return date_str
+    
+def get_date(d, hrs=True):
+    date_str = f"{d.strftime('%Y-%m-%d')}"
+    if hrs is True:
+        return f"{date_str} 00:00:00"
+    else:
+        return date_str
+    
+def get_end_of_month(d, hrs=True):
+    # d是某月任意开始时间
+    yrs = int(d.strftime('%Y'))
+    mths = int(d.strftime('%m'))
+    day = calendar.monthrange(yrs, mths)[1]
+    date_str = f"{yrs}-{d.strftime('%m')}-{day}"
+    if hrs is True:
+        return f"{date_str} 23:59:59"
+    else:
+        return date_str
