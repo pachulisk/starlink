@@ -110,7 +110,7 @@ async def get_gw_traffic(query: GetGWTrafficParam):
             up = d["uptraffic"]
             down = d["downtraffic"]
             list.append({
-                "acct": d["acct"],
+                # "acct": d["acct"],
                 "up": up,
                 "down": down,
                 "total": f"{float(up) + float(down)}",
