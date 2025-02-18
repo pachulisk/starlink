@@ -8,7 +8,7 @@ from app.sdk import SDK
 from .routers import gateway
 from .routers import auth
 from . import db, task
-from .routers import auth2
+from .routers import auth2, traffic
 from .routers import account, weather
 from .routers import user
 from .utils import get_gateway_by_id
@@ -39,6 +39,7 @@ app.include_router(task.task)
 app.include_router(weather.weather)
 app.include_router(auth2.auth2)
 app.include_router(user.user)
+app.include_router(traffic.traffic)
 
 
 class ListVirtualGroupRequest(BaseModel):

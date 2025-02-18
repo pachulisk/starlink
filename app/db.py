@@ -2,8 +2,9 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from app.utils import get_gateway_by_id
 from app.sdk import SDK
-from app.supabase import supabase
+from app.supabase import supabase, get_supabase_table_latest_row, build_sql_for_latest_row, get_db_for_table, meta_for_table_name, formalize_supabase_datetime, build_dict_from_line, to_date, str_strip
 from .task import post_single_task
+import uuid
 from datetime import datetime, date
 import time
 import urllib.parse
@@ -12,6 +13,7 @@ from .celery_app import perform_task_celery, add
 from .tasks.sync_user import UpsertUsersToSupabase, UpsertDeviceToSupabase
 import urllib.parse
 import abc
+from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
@@ -42,44 +44,7 @@ from .utils import ping, upsert_user, haskv, getkv, setkv
 #     def parse(self):
 #         pass
 
-def make_list(row):
-    my_lst = row.split("|")
-    return list(filter(lambda x: len(x)>0, my_lst))
 
-def build_dict_from_line(meta, line):
-    """
-    meta: happendate|hour|uptraffic|downtraffic|
-    line: 2024-11-07|14|5772895|21432009|
-    """
-    dict = {}
-    meta_list = make_list(meta)
-    meta_len = len(meta_list)
-    data_list = make_list(line)
-    data_len = len(data_list)
-    length = min(meta_len, data_len)
-    for i in range(length):
-        dict[meta_list[i]] = data_list[i]
-    return dict
-def meta_for_table_name(table_name):
-    meta_mapping = {
-        "hourreport": "happendate|hour|uptraffic|downtraffic|",
-        "ipreport": "happendate|ip|uptraffic|downtraffic|",
-        "acctreport": "happendate|acct|uptraffic|downtraffic|",
-        "webreport": "ip|group1|acct|happendate|host|category1|category2|visitcnt|uptraffic|downtraffic|during|",
-        "webreport_today": "ip|group1|acct|happendate|host|category1|category2|visitcnt|uptraffic|downtraffic|during|",
-        "protocolreport": "ip|group1|acct|happendate|category|protocol|uptraffic|downtrafficduring|",
-        "protocolreport_today": "ip|group1|acct|happendate|category|protocol|uptraffic|downtrafficduring|",
-        "sessionslog": "ip|group1|acct|mac|happentime|direction|proto|target|cmd|remark|",
-        "ftplog": "ip|group1|acct|mac|happentime|direction|type|target|filesize|refer|filename|title|useragent|fileid|remark|targetip|",
-        "ipmaclog": "ip|group1|acct|mac|happentime|hostname|",
-        "maillog": "ip|group1|acct|mac|happentime|direction|fromid|toid|subject|messageid|fileid|proto|remark|targetip|",
-        "webpostlog": "ip|group1|acct|mac|happentime|host|webtitle|postsize|posturl|fileid|refer|useragent|tls|remark|targetip|",
-        "websurflog": "ip|group1|acct|mac|happentime|host|url|webtitle|tls|useragent|remark|targetip|"
-    }
-    if table_name in meta_mapping:
-        return meta_mapping[table_name]
-    else:
-        return None
 DB = APIRouter()
 
 class DBQuery(BaseModel):
@@ -112,24 +77,6 @@ async def sb_table_latest_row_query(query: SupabaseTableLatestRowQuery):
         raise HTTPException(status_code=400, detail="table should not be empty")
     data = await get_supabase_table_latest_row(query.table, query.gwid, query.column or "happendate")
     return data
-
-async def get_supabase_table_latest_row(table_name, gwid, column="happendate"):
-    response = supabase.table(table_name).select(column).eq("gwid", gwid).order(column, desc=True).limit(1).execute()
-    data = response.data
-    if len(data) <= 0:
-        return None
-    else:
-        return data[0].get(column)
-
-def get_db_for_table(table_name):
-    if  table_name in ["ipreport", "acctreport"]:
-        return "ISP.db"
-    elif table_name in ["hourreport", "webreport", "protocolreport", "protocolreport_today"]:
-        return "report.db"
-    else: 
-        return "wfilter.db"
-def build_sql_for_latest_row(table_name, column="happendate"):
-    return f"SELECT {column} FROM {table_name} ORDER BY {column} DESC LIMIT 1"
 
 @DB.post("/get_gw_table_latest_row", tags=["DB"])
 async def get_gw_table_latest_row(table_name, gwid, column="happendate"):
@@ -165,18 +112,6 @@ async def get_gw_table_latest_row(table_name, gwid, column="happendate"):
         sdk.logout()
 
 
-def to_date(data):
-    print(f"to_date: {data}")
-    d = data
-    # regex = re.compile(r'T')
-    # if regex.match(d):
-    index = d.find('T')
-    if index != -1:
-        d = data[:index]
-    print(f"to_date, after process d = {d}")
-    processed = datetime.strptime(d, "%Y-%m-%d")
-    print(f"processed = {processed}")
-    return processed
 
 def compare_supabase_and_gw_lastrow(supabase_data, gw_data):
     if gw_data is None:
@@ -186,13 +121,7 @@ def compare_supabase_and_gw_lastrow(supabase_data, gw_data):
     else:
         return to_date(gw_data) > to_date(supabase_data)
 
-def str_strip(data):
-    if data is None:
-        return None
-    else:
-        ret = data.replace("\n", "")
-        ret = ret.replace("|", "")
-        return ret
+
 
 def get_basic_rpc_result(data):
     if data is not None:
@@ -271,14 +200,6 @@ class CreateSyncTaskQuery(BaseModel):
     gwid: str
     column: str
 
-def formalize_supabase_datetime(dt):
-    d = dt
-    # regex = re.compile(r'T')
-    # if regex.match(d):
-    index = d.find('T')
-    if index != -1:
-        d = dt[:index]
-    return d
 
 # 创建同步任务
 # column: 同步比较的列名称，默认是happendate
@@ -336,19 +257,32 @@ class PostSyncTasks(BaseModel):
     gwid: str
     column: str
 @DB.post("/post_sync_tasks", tags=["tasks"])
-async def post_sync_tasks(query: PostSyncTasks, background_tasks: BackgroundTasks):
+async def post_sync_tasks(query: PostSyncTasks):
     column = query.column or "happendate"
     gwid = query.gwid
     table_name = query.table_name
     q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column)
     task_ret = await create_sync_task(q)
     tasks = task_ret.get("tasks")
+    cmds = []
     for task in tasks: 
         # 生成sync命令
         d = build_sync_command(gwid, task, table_name, ["gwid", column])
         # 发送sync命令
         print(f"task  ==== {task}, d === {d}")
-        background_tasks.add_task(post_single_task, d)
+        cmds.append(d)
+    # 对于cmds中的命令，开始执行
+    result = []
+    for cmd in cmds:
+        task_id = str(uuid.uuid4())
+        command = cmd.get("cmd")
+        data = cmd.get("data")
+        print(f"task_id: {task_id}, command: {command}, data: {data}")
+        tr = TaskRequest(id=task_id, command=command, data=data)
+        res = await run_single_task(tr)
+        print(f"finish task result =  ", str(res))
+        result.append(res)
+    return result
 
 
 @DB.post("/sync_gateway_online_status", tags=["tasks"])
@@ -838,7 +772,6 @@ async def get_account_list(query: GetAccountListQuery):
     POST /get_account_list获取用户列表
     参数1： gwid=当前网关id，必须
     """
-
     # 1. 获取gwid
     gwid = query.gwid
     gw = await get_gateway_by_id(gwid)
