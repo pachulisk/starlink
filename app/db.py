@@ -287,7 +287,7 @@ async def post_sync_tasks(query: PostSyncTasks):
 class SyncTrafficParam(BaseModel):
     gwid: str
 
-@DB.post("/sync_traffics", tags=["traffic"], timeout=timedelta(seconds=200000))
+@DB.post("/sync_traffics", tags=["traffic"])
 async def sync_traffics(query: SyncTrafficParam):
     """
     将hourreport, acctreport两张表的内容，从db中同步到supabase的同名表中。
