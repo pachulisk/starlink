@@ -17,7 +17,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import ping, upsert_user, haskv, getkv, setkv
+from .utils import ping, upsert_user, haskv, getkv, setkv, gw_login
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -587,6 +587,46 @@ def sync_firewall(sdk, firewall_json):
         type = value.get(".type")
         # 通过sdk同步config
         sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+def sync_users(sdk, users_json):
+    """
+    对users的json进行同步。下面是可能的配置样式:
+    "wfuser1737514663429": {
+        ".anonymous": false,
+        ".type": "wfuser",
+        ".name": "wfuser1737514663429",
+        ".index": 17,
+        "username": "rflh",
+        "remark": "ISP-1-bandwidth1733974887482",
+        "changepwd": "true",
+        "emails": " ",
+        "pppoe": "false",
+        "webauth": "true",
+        "datelimit": "2029-01-01",
+        "group": "0",
+        "logins": "0",
+        "static": "false",
+        "staticip": " ",
+        "macbound": "0",
+        "macaddr": " ",
+        "password": "<#3e2b89a35b96b30c70d5c07221eb784f#>",
+        "id": "wfuser1737514663429"
+    }
+    """
+    cfgname = "wfilter-account"
+    # 对于users_json这个json对象中的每一个kv进行遍历
+    for k, v in users_json.items():
+        type = v.get(".type")
+        # 只同步类型为wfuser的项:
+        if type != "wfuser":
+            continue
+        # 单独处理admin，如果用户名为admin,则不同步
+        if v.get("username") == "admin":
+            continue 
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, k, v)
+    sdk.config_apply()
         
 
 @DB.post("/upload_config", tags=["DB"])
@@ -594,32 +634,15 @@ async def upload_config(gwid: str, file: UploadFile = File(...)):
     # 读取上传的文件内容（异步方式）
     content = await file.read()
     # 解析JSON内容  
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
+    with gw_login(gwid) as sdk_obj:
         json_data = json.loads(content)
         # 兼容处理data
         if "data" in json_data:
-           json_data = json_data["data"] 
-        if sdk.login(address, username, password):
-            # 1. 同步firewall
-            sync_firewall(sdk, firewall_json=json_data["firewall"])
-            # return { "data": rval }
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except json.JSONDecodeError:
-        return {"error": "Invalid JSON format"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
-
+           json_data = json_data["data"]
+        # 同步防火墙策略
+        sync_firewall(sdk_obj, firewall_json=json_data["firewall"])
+        # 同步用户
+        sync_users(sdk_obj, users_json=json_data["wfilter-account"])
 
 class GetUserBandwidthQuery(BaseModel):
     gwid: str
