@@ -284,6 +284,35 @@ async def post_sync_tasks(query: PostSyncTasks):
         result.append(res)
     return result
 
+class SyncTrafficParam(BaseModel):
+    gwid: str
+
+@DB.post("/sync_traffics", tags=["traffic"])
+async def sync_traffics(query: SyncTrafficParam):
+    """
+    将hourreport, acctreport两张表的内容，从db中同步到supabase的同名表中。
+    gwid=网关id，必选
+    """
+    # 1. 检查gwid是否为空
+    gwid = query.gwid
+    if gwid is None or gwid == "":
+        raise HTTPException(status_code=400, detail="gwid should not be empty")
+    # 2. 检查gwid是否存在
+    gw = await get_gateway_by_id(gwid)
+    if gw is None or len(gw.data) == 0:
+        raise HTTPException(status_code=400, detail="gateway not found")
+    # 3. 调用post_sync_tasks，同步hourreport表
+    q = PostSyncTasks(table_name="hourreport", gwid=gwid, column="happendate")
+    task_ret = await post_sync_tasks(q)
+    # 对结果记录日志
+    print(f"同步hourreport表: task_ret = {task_ret}")
+    # 4. 调用post_sync_tasks，同步acctreport表
+    q = PostSyncTasks(table_name="acctreport", gwid=gwid, column="happendate")
+    task_ret = await post_sync_tasks(q)
+    # 对结果记录日志
+    print(f"同步acctreport表: task_ret = {task_ret}")
+    # 5. 返回结果
+    return { "result": "success" }
 
 @DB.post("/sync_gateway_online_status", tags=["tasks"])
 async def sync_gateway_online_status():
