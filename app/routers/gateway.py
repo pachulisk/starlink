@@ -128,7 +128,8 @@ async def read_gateways():
             "serial_no": item.get('serial_no'),
             "client_name": item.get('client_name'),
             "enable_time": item.get('enable_time'),
-            "online": is_online(item.get('address')),
+            # "online": is_online(item.get('address')),
+            "online": "false",
             "fleet": item.get('fleet'), 
             "total_traffic": total_traffic, # 网关流量
             "device_count": device_count, # 网关设备数
