@@ -607,6 +607,43 @@ def sync_times(sdk, times_json):
         sdk.config_add(cfgname, type, key, value)
     sdk.config_apply()
 
+def sync_app_control(sdk, appcontrol_json):
+    cfgname = "wfilter-appcontrol"
+    # 对于firewall这个json对象中的每一个kv进行遍历
+    for key, value in appcontrol_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+def sync_web_filter(sdk, webfilter_json):
+    cfgname = "wfilter-webfilter"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in webfilter_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步wfilter_exception
+def sync_wfilter_exception(sdk, exception_json):
+    cfgname = "wfilter-exception"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in exception_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步wfilter-imfilter
+def sync_wfilter_imfilter(sdk, imfilter_json):
+    cfgname = "wfilter-imfilter"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in imfilter_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+
 def sync_users(sdk, users_json):
     """
     对users的json进行同步。下面是可能的配置样式:
@@ -665,6 +702,14 @@ async def upload_config(gwid: str, file: UploadFile = File(...)):
         sync_groups(sdk_obj, groups_json=json_data["wfilter-groups"])
         # 同步时间
         sync_times(sdk_obj, times_json=json_data["wfilter-times"])
+        # 同步app_control
+        sync_app_control(sdk_obj, appcontrol_json=json_data["wfilter-appcontrol"])
+        # 同步wfilter_webfilter
+        sync_web_filter(sdk_obj, webfilter_json=json_data["wfilter-webfilter"])
+        # 同步wfilter_exception
+        sync_wfilter_exception(sdk_obj, exception_json=json_data["wfilter-exception"])
+        # 同步wfilter-imfilter
+        sync_wfilter_imfilter(sdk_obj, imfilter_json=json_data["wfilter-imfilter"])
         return { "result": "success" }
 
 class GetUserBandwidthQuery(BaseModel):
