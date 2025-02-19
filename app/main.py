@@ -13,10 +13,30 @@ from .routers import account, weather
 from .routers import user
 from .utils import get_gateway_by_id
 
+import time
+from fastapi import Request, Response
+from starlette.types import ASGIApp
+
+class DynamicTimeoutMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, request: Request, call_next) -> Response:
+        # 针对特定路径调整超时
+        long_timeout_urls = {
+            "/upload_config": 100000,
+            "/sync_traffics": 100000,
+        }
+        if request.url.path in long_timeout_urls :
+            timeout = long_timeout_urls[request.url.path]
+            request.scope["extensions"]["http.response.template"] = {"timeout": timeout}
+        return await call_next(request)
+
+
 # 加载.env 文件
 
 app = FastAPI()
-
+app.add_middleware(DynamicTimeoutMiddleware)
 # def credential_exception_handler(request: Request, exc: AuthJWTException):
 #     return JSONResponse(
 #         status_code=exc.status_code,
