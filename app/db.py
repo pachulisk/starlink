@@ -643,6 +643,189 @@ def sync_wfilter_imfilter(sdk, imfilter_json):
         type = value.get(".type")
         # 通过sdk同步config
         sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+def sync_mail_filter(sdk, mail_json):
+    cfgname = "wfilter-mailfilter"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in mail_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步sslinspect
+def sync_sslinspect(sdk, sslinspect_json):
+    cfgname = "wfilter-sslinspect"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in sslinspect_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步natdetector
+def sync_natdetector(sdk, natdetector_json):
+    cfgname = "wfilter-natdetector"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in natdetector_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步webpush
+def sync_webpush(sdk, webpush_json):
+    cfgname = "wfilter-webpush"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in webpush_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+# 同步bwcontrol
+def sync_bwcontrol(sdk, bwcontrol_json):
+    cfgname = "wfilter-bwcontrol"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in bwcontrol_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+#同步ipcontrol
+def sync_ipcontrol(sdk, ipcontrol_json):
+    cfgname = "wfilter-ipcontrol"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in ipcontrol_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步mwan
+def sync_mwan(sdk, mwan_json):
+    cfgname = "wfilter-mwan"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in mwan_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        if type == "system":
+            continue
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步adconf
+def sync_adconf(sdk, adconf_json):
+    cfgname = "wfilter-adconf"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in adconf_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步webauth
+def sync_webauth(sdk, webauth_json):
+    cfgname = "wfilter-webauth"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in webauth_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步pppoe
+def sync_pppoe(sdk, pppoe_json):
+    cfgname = "wfilter-pppoe"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in pppoe_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步pptpd
+def sync_pptpd(sdk, pptpd_json):
+    cfgname = "wfilter-pptpd"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in pptpd_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步ipsec
+def sync_ipsec(sdk, ipsec_json):
+    cfgname = "wfilter-ipsec"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in ipsec_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+# 同步openvpn
+def sync_openvpn(sdk, openvpn_json):
+    cfgname = "openvpn"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in openvpn_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步webvpn
+def sync_webvpn(sdk, webvpn_json):
+    cfgname = "wfilter-webvpn"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in webvpn_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        if type == "system":
+            continue
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步sdwan
+def sync_sdwan(sdk, sdwan_json):
+    cfgname = "wfilter-sdwan"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in sdwan_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步antiddos
+def sync_antiddos(sdk, antiddos_json):
+    cfgname = "antiddos"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in antiddos_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
+# 同步snort
+def sync_snort(sdk, snort_json):
+    cfgname = "wfilter-snort"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in snort_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+# 同步aisecurity
+def sync_aisecurity(sdk, aisecurity_json):
+    cfgname = "wfilter-aisecurity"
+    # 对于wfilter-webfilter这个json对象中的每一个kv进行遍历
+    for key, value in aisecurity_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        if type == "system":
+            continue
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
 
 def sync_users(sdk, users_json):
     """
@@ -710,6 +893,40 @@ async def upload_config(gwid: str, file: UploadFile = File(...)):
         sync_wfilter_exception(sdk_obj, exception_json=json_data["wfilter-exception"])
         # 同步wfilter-imfilter
         sync_wfilter_imfilter(sdk_obj, imfilter_json=json_data["wfilter-imfilter"])
+        # 同步wfilter-mailfilter
+        sync_mail_filter(sdk_obj, mail_json=json_data["wfilter-mailfilter"])
+        # 同步wfilter-sslinspect
+        sync_sslinspect(sdk_obj, sslinspect_json=json_data["wfilter-sslinspect"])
+        # 同步natdetector
+        sync_natdetector(sdk_obj, natdetector_json=json_data["wfilter-natdetector"])
+        # 同步webpush
+        sync_webpush(sdk_obj, webpush_json=json_data["wfilter-webpush"])
+        # 同步bwcontrol
+        sync_bwcontrol(sdk_obj, bwcontrol_json=json_data["wfilter-bwcontrol"])
+        # 同步ipcontrol
+        sync_ipcontrol(sdk_obj, ipcontrol_json=json_data["wfilter-ipcontrol"])
+        # 同步adconf
+        sync_adconf(sdk_obj, adconf_json=json_data["wfilter-adconf"])
+        # 同步webauth
+        sync_webauth(sdk_obj, webauth_json=json_data["wfilter-webauth"])
+        # 同步pppoe
+        sync_pppoe(sdk_obj, pppoe_json=json_data["wfilter-pppoe"])
+        # 同步pptpd
+        sync_pptpd(sdk_obj, pptpd_json=json_data["wfilter-pptpd"])
+        # 同步ipsec
+        sync_ipsec(sdk_obj, ipsec_json=json_data["wfilter-ipsec"])
+        # 同步openvpn
+        sync_openvpn(sdk_obj, openvpn_json=json_data["openvpn"])
+        # 同步webvpn
+        sync_webvpn(sdk_obj, webvpn_json=json_data["wfilter-webvpn"])
+        # 同步sdwan
+        sync_sdwan(sdk_obj, sdwan_json=json_data["wfilter-sdwan"])
+        # 同步antiddos
+        sync_antiddos(sdk_obj, antiddos_json=json_data["antiddos"])
+        # 同步snort
+        sync_snort(sdk_obj, snort_json=json_data["wfilter-snort"])
+        # 同步aisecurity
+        sync_aisecurity(sdk_obj, aisecurity_json=json_data["wfilter-aisecurity"])
         return { "result": "success" }
 
 class GetUserBandwidthQuery(BaseModel):
