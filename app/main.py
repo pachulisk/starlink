@@ -39,18 +39,6 @@ from starlette.types import ASGIApp
 
 app = FastAPI()
 
-@app.middleware('http')
-async def dynamic_timeout(request: Request, call_next) -> Response:
-    # 针对特定路径调整超时
-    long_timeout_urls = {
-        "/upload_config": 100000,
-        "/sync_traffics": 100000,
-    }
-    if request.url.path in long_timeout_urls :
-        timeout = long_timeout_urls[request.url.path]
-        request.scope["extensions"]["http.response.template"] = {"timeout": timeout}
-    return await call_next(request)
-
 @app.middleware("http")
 async def timeout_middleware(request: Request, call_next):
     long_timeout_urls = {
