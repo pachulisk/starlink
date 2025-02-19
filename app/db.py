@@ -588,6 +588,15 @@ def sync_firewall(sdk, firewall_json):
         # 通过sdk同步config
         sdk.config_add(cfgname, type, key, value)
     sdk.config_apply()
+    
+def sync_groups(sdk, groups_json):
+    cfgname = "wfilter-groups"
+    # 对于firewall这个json对象中的每一个kv进行遍历
+    for key, value in groups_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
 
 def sync_users(sdk, users_json):
     """
@@ -643,6 +652,9 @@ async def upload_config(gwid: str, file: UploadFile = File(...)):
         sync_firewall(sdk_obj, firewall_json=json_data["firewall"])
         # 同步用户
         sync_users(sdk_obj, users_json=json_data["wfilter-account"])
+        # 同步组
+        sync_groups(sdk_obj, groups_json=json_data["wfilter-groups"])
+        return { "result": "success" }
 
 class GetUserBandwidthQuery(BaseModel):
     gwid: str
