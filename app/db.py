@@ -598,6 +598,15 @@ def sync_groups(sdk, groups_json):
         sdk.config_add(cfgname, type, key, value)
     sdk.config_apply()
 
+def sync_times(sdk, times_json):
+    cfgname = "wfilter-times"
+    # 对于firewall这个json对象中的每一个kv进行遍历
+    for key, value in times_json.items():
+        type = value.get(".type")
+        # 通过sdk同步config
+        sdk.config_add(cfgname, type, key, value)
+    sdk.config_apply()
+
 def sync_users(sdk, users_json):
     """
     对users的json进行同步。下面是可能的配置样式:
@@ -654,6 +663,8 @@ async def upload_config(gwid: str, file: UploadFile = File(...)):
         sync_users(sdk_obj, users_json=json_data["wfilter-account"])
         # 同步组
         sync_groups(sdk_obj, groups_json=json_data["wfilter-groups"])
+        # 同步时间
+        sync_times(sdk_obj, times_json=json_data["wfilter-times"])
         return { "result": "success" }
 
 class GetUserBandwidthQuery(BaseModel):
