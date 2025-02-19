@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException, Request ,Depends,status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import asyncio
+from starlette.status import HTTP_504_GATEWAY_TIMEOUT
 load_dotenv()
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from app.sdk import SDK
@@ -48,6 +50,25 @@ async def dynamic_timeout(request: Request, call_next) -> Response:
         timeout = long_timeout_urls[request.url.path]
         request.scope["extensions"]["http.response.template"] = {"timeout": timeout}
     return await call_next(request)
+
+@app.middleware("http")
+async def timeout_middleware(request: Request, call_next):
+    long_timeout_urls = {
+        "/upload_config": 100000,
+        "/sync_traffics": 100000,
+    }
+    timeout = 10
+    if request.url.path in long_timeout_urls:
+        timeout = long_timeout_urls[request.url.path]
+    try:
+        start_time = time.time()
+        return await asyncio.wait_for(call_next(request), timeout=timeout)
+
+    except asyncio.TimeoutError:
+        process_time = time.time() - start_time
+        return JSONResponse({'detail': 'Request processing time excedeed limit',
+                             'processing_time': process_time},
+                            status_code=HTTP_504_GATEWAY_TIMEOUT)
 
 # def credential_exception_handler(request: Request, exc: AuthJWTException):
 #     return JSONResponse(
