@@ -114,10 +114,13 @@ async def read_gateways():
     list = []
     for item in response.data:
         gwid = item["id"]
-        trafffic = get_total_traffic_by_gwid(gwid)
-        total_traffic = trafffic[0] + trafffic[1]
-        device_count = get_device_by_gwid(gwid)
-        user_count = get_users_count_by_gwid(gwid)
+        # trafffic = get_total_traffic_by_gwid(gwid)
+        # total_traffic = trafffic[0] + trafffic[1]
+        total_traffic = 100
+        # device_count = get_device_by_gwid(gwid)
+        device_count = 10
+        # user_count = get_users_count_by_gwid(gwid)
+        user_count = 12
         list.append({
             "id": item.get('id'),
             "name": item.get('name'),
