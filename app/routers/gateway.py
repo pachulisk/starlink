@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import ping
+from ..utils import ping, normalize_traffic
 
 router = APIRouter()
 
@@ -132,7 +132,7 @@ async def read_gateways():
             "online": is_online(item.get('address')),
             "online": "false",
             "fleet": item.get('fleet'), 
-            "total_traffic": total_traffic, # 网关流量
+            "total_traffic": normalize_traffic(total_traffic), # 网关流量
             "device_count": device_count, # 网关设备数
             "user_count": user_count, # 网关用户数
         })        
