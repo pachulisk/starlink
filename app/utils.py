@@ -24,6 +24,15 @@ def get_traffic_ratio():
     """返回流量乘数"""
     return cfg.TRAFFIC_RATIO
 
+def normalize_traffic(traffic):
+    """
+    归一化流量, 根据流量乘数和流量计算最终归一化的流量数值
+    """
+    ratio = get_traffic_ratio()
+    if ratio is None:
+        ratio = 1.0
+    return traffic * ratio
+
 def is_valid_ipv4(ip):
     """
     判断输入的字符串是否为合法的 IPv4 地址
