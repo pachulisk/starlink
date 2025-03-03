@@ -8,9 +8,21 @@ from fastapi import HTTPException
 from .sdk import SDK
 from datetime import datetime, date
 import calendar
+import os
+from .config import Config
 
 from contextlib import contextmanager
 
+
+env = os.environ.get('env')
+# if env is empty, set env to "test"
+if env is None:
+    env = "test"
+cfg = Config(env)
+
+def get_traffic_ratio():
+    """返回流量乘数"""
+    return cfg.TRAFFIC_RATIO
 
 def is_valid_ipv4(ip):
     """
