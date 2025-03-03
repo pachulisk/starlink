@@ -1085,8 +1085,8 @@ async def get_device_list(query: GetAccountListQuery):
                 device["ip"] = item["ip"]
                 device["macaddr"] = item["mac"]
                 device["group"] = item["group"]
-                device["up"] = item["up"]
-                device["down"] = item["down"]
+                device["up"] = normalize_traffic(item["up"])
+                device["down"] = normalize_traffic(item["down"])
                 device["gwid"] = gwid
                 list.append(device)
             luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
