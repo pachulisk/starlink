@@ -3,7 +3,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import get_gateway_by_id, gw_login, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import get_gateway_by_id, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime
 import json
@@ -111,9 +111,9 @@ async def get_gw_traffic(query: GetGWTrafficParam):
             down = d["downtraffic"]
             list.append({
                 # "acct": d["acct"],
-                "up": up,
-                "down": down,
-                "total": f"{float(up) + float(down)}",
+                "up": normalize_traffic(up),
+                "down": normalize_traffic(down),
+                "total": f"{normalize_traffic(float(up) + float(down))}",
                 "happendate": to_date(d["happendate"])
             })
         return {"data": get_data_with_format(list, format)}
