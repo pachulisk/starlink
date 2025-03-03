@@ -1101,7 +1101,7 @@ async def get_device_list(query: GetAccountListQuery):
 def get_total_traffic(item):
     up = item.get("uptraffic") or 0.0
     down = item.get("downtraffic") or 0.0
-    return up + down
+    return normalize_traffic(up + down)
 
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
