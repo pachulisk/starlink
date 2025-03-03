@@ -1027,9 +1027,9 @@ async def get_user_bandwidth_detail(query: GetUserBandwidthDetailQuery):
             down = d["downtraffic"]
             list.append({
                 "acct": d["acct"],
-                "up": up,
-                "down": down,
-                "total": f"{float(up) + float(down)}",
+                "up": normalize_traffic(up),
+                "down": normalize_traffic(down),
+                "total": f"{normalize_traffic(float(up) + float(down))}",
                 "happendate": to_date(d["happendate"])
             })
         return {"data": list}
