@@ -993,7 +993,7 @@ async def get_user_bandwidth(query: GetUserBandwidthQuery):
             up = up + int(float(entry.get("uptraffic")))
             down = down + int(float(entry.get("downtraffic")))
             total = total + up + down
-        return { "up": f"{up}", "down": f"{down}", "total": f"{total}" }
+        return { "up": f"{normalize_traffic(up)}", "down": f"{normalize_traffic(down)}", "total": f"{normalize_traffic(total)}" }
 
 class GetUserBandwidthDetailQuery(BaseModel):
     gwid: str
