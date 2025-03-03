@@ -148,9 +148,9 @@ async def get_user_traffic(query: GetGWTrafficParam):
             down = d["downtraffic"]
             list.append({
                 "acct": d["acct"],
-                "up": up,
-                "down": down,
-                "total": f"{float(up) + float(down)}",
+                "up": normalize_traffic(up),
+                "down": normalize_traffic(down),
+                "total": f"{normalize_traffic(float(up) + float(down))}",
                 "happendate": to_date(d["happendate"])
             })
         return {"data": get_data_with_format(list, format)}
