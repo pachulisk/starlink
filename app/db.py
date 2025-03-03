@@ -17,7 +17,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import ping, upsert_user, haskv, getkv, setkv, gw_login
+from .utils import ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1239,7 +1239,7 @@ async def get_stats():
             "client_count": client_count,
             "fleet_count": fleet_count,
             "user_count": users_count,
-            "total_traffic": up+down
+            "total_traffic": normalize_traffic(up+down)
         } }
 
 @DB.post("/test_upsert_user", tags=["test"])
