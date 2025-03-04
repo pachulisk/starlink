@@ -1310,29 +1310,15 @@ class UserSessionParam(BaseModel):
 # 用户上下线
 async def kill_user(param: UserSessionParam):
     # 打印参数
+    gwid = param.gwid
     print("kill_user param = {}".format(param))
-    sdk = SDK()
-    gw = await get_gateway_by_id(param.gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    try:
-        if sdk.login(address, username, password):
-            # 根据op决定type
-            # 如果op是up，则type为REMOVE；如果op是down，则type为ALL
-            type = "REMOVE" if param.op == "up" else "ALL"
-            result = sdk.kill_connection(param.user, 0, type, "", "")
-            print(result)
-            return result
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+    with gw_login(gwid) as sdk_obj:
+        # 根据op决定type
+        # 如果op是up，则type为REMOVE；如果op是down，则type为ALL
+        type = "REMOVE" if param.op == "up" else "ALL"
+        result = sdk_obj.kill_connection(param.user, 0, type, "", "")
+        print(result)
+        return result
 
 @DB.post("/update_online_status", tags=["DB"])
 async def update_online_status(param: UserSessionParam):
