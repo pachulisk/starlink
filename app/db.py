@@ -128,8 +128,9 @@ def get_basic_rpc_result(data):
         print(data)
         if data['result'] is not None:
             print(data['result'])
-            p = data['result'][1]
-            return p
+            if len(data['result']) > 1:
+                p = data['result'][1]
+                return p
     return None
 def get_rpc_result(data):
     p = get_basic_rpc_result(data)
@@ -540,8 +541,11 @@ async def list_config(query: ListConfigQuery):
         for config_key in config_list:
             p = sdk_obj.config_load(config_key)
             p = get_basic_rpc_result(p)
-            p = p["values"]
-            rval[config_key] = p
+            if p is None:
+                continue
+            else:
+                p = p["values"]
+                rval[config_key] = p
         return { "data": rval }
 
 def sync_firewall(sdk, firewall_json):
