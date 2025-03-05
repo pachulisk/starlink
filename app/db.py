@@ -534,30 +534,15 @@ class ListConfigQuery(BaseModel):
 @DB.post("/list_config", tags=["DB"])
 async def list_config(query: ListConfigQuery):
     gwid = query.gwid
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
-        if sdk.login(address, username, password):
-            rval = {}
-            config_list = ["network", "firewall", "wfilter-groups", "wfilter-times", "dhcp", "wfilter-appcontrol", "wfilter-webfilter", "wfilter-exception", "wfilter-imfilter", "wfilter-mailfilter", "wfilter-sslinspect", "wfilter-natdetector", "wfilter-webpush", "wfilter-bwcontrol", "wfilter-ipcontrol", "wfilter-mwan", "wfilter-account", "wfilter-adconf", "wfilter-webauth", "wfilter-pppoe", "wfilter-pptpd", "wfilter-ipsec", "openvpn", "wfilter-webvpn", "wfilter-sdwan", "antiddos", "wfilter-snort", "wfilter-aisecurity"]
-            for config_key in config_list:
-                p = sdk.config_load(config_key)
-                p = get_basic_rpc_result(p)
-                p = p["values"]
-                rval[config_key] = p
-            return { "data": rval }
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+    with gw_login(gwid) as sdk_obj:
+        rval = {}
+        config_list = ["network", "firewall", "wfilter-groups", "wfilter-times", "dhcp", "wfilter-appcontrol", "wfilter-webfilter", "wfilter-exception", "wfilter-imfilter", "wfilter-mailfilter", "wfilter-sslinspect", "wfilter-natdetector", "wfilter-webpush", "wfilter-bwcontrol", "wfilter-ipcontrol", "wfilter-mwan", "wfilter-account", "wfilter-adconf", "wfilter-webauth", "wfilter-pppoe", "wfilter-pptpd", "wfilter-ipsec", "openvpn", "wfilter-webvpn", "wfilter-sdwan", "antiddos", "wfilter-snort", "wfilter-aisecurity"]
+        for config_key in config_list:
+            p = sdk_obj.config_load(config_key)
+            p = get_basic_rpc_result(p)
+            p = p["values"]
+            rval[config_key] = p
+        return { "data": rval }
 
 def sync_firewall(sdk, firewall_json):
     """
@@ -1111,92 +1096,76 @@ async def get_account_list(query: GetAccountListQuery):
     """
     # 1. 获取gwid
     gwid = query.gwid
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
-        if sdk.login(address, username, password):
-            p = sdk.list_account()
-            print("====list_account, p = " + str(p))
-            p = get_basic_rpc_result(p)
-            print("====list_account, get_basic_rpc_result p = ", str(p))
-            p = p["values"]
-            print("====list_account, value p = ", str(p))
-            # r = sdk.list_online_users(1000, "")
-            # r = get_basic_rpc_result(r)
-            # r = str_strip(r["result"])
-            # print(r)
-            # r = json.loads(r)
-            # r = r["result"]
-            # kv = {}
-            # for u in r:
-            #     account = u["account"]
-            #     account = urllib.parse.quote_plus(account)
-            #     kv[account] = True
+    with gw_login(gwid) as sdk_obj:
+        p = sdk_obj.list_account()
+        print("====list_account, p = " + str(p))
+        p = get_basic_rpc_result(p)
+        print("====list_account, get_basic_rpc_result p = ", str(p))
+        p = p["values"]
+        print("====list_account, value p = ", str(p))
+        # r = sdk.list_online_users(1000, "")
+        # r = get_basic_rpc_result(r)
+        # r = str_strip(r["result"])
+        # print(r)
+        # r = json.loads(r)
+        # r = r["result"]
+        # kv = {}
+        # for u in r:
+        #     account = u["account"]
+        #     account = urllib.parse.quote_plus(account)
+        #     kv[account] = True
 
-            # 1. 遍历list_account的结果，将结果转换为list
-            list = []   
-            for key, value in p.items():
-                if value[".type"] == "wfuser" and key != "admin":
-                    print("====list_account, value = ", str(value))
-                    user = {
-                        "gwid": gwid,
-                        "username": value["username"],
-                        "remark": value.get("remark") or "",
-                        "pppoe": value["pppoe"],
-                        "webauth": value["webauth"],
-                        "static": value["static"],
-                        "staticip": value["staticip"],
-                        "datelimit": value["datelimit"],
-                        "group": value["group"],
-                        "logins": value["logins"],
-                        "macbound": value["macbound"],
-                        "changepwd": value["changepwd"],
-                        "id": value.get("id") or "",
-                        # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
-                    }
-                    list.append(user)
-            # 1.1 将list_account获取的信息，通过luigi任务同步到supabase
-            print("====start build luigi, list = " + json.dumps(list))
-            luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
-            # 2. 通过supabase的user_traffic_view读取用户流量信息，包括下列字段:
-            # gateway_name
-            # username
-            # uptraffic
-            # downtraffic
-            # group
-            # online
-            # datelimit
-            # 2.1 从supabase的user_traffic_view中获取用户流量信息
-            r = supabase.table("user_traffic_view").select("*").execute()
-            data = []
-            for item in r.data:
-                print("====get_account_list, item = " + str(item))
-                # 2.2 遍历r.data，将r.data中的数据转换为list
-                if item.get("delete_mark") is not None:
-                    continue
-                data.append({
-                    "gateway_name": item["gateway_name"],
-                    "username": item["username"],
-                    "total_traffic": get_total_traffic(item),
-                    "group": item["group"],
-                    "online": item["online"],
-                    "datelimit": item["datelimit"],
-                })
-            # 2.2 将r.data返回
-            return { "data": data }
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        print("====get_account_list error, error = " + str(e))
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+        # 1. 遍历list_account的结果，将结果转换为list
+        list = []   
+        for key, value in p.items():
+            if value[".type"] == "wfuser" and key != "admin":
+                print("====list_account, value = ", str(value))
+                user = {
+                    "gwid": gwid,
+                    "username": value["username"],
+                    "remark": value.get("remark") or "",
+                    "pppoe": value["pppoe"],
+                    "webauth": value["webauth"],
+                    "static": value["static"],
+                    "staticip": value["staticip"],
+                    "datelimit": value["datelimit"],
+                    "group": value["group"],
+                    "logins": value["logins"],
+                    "macbound": value["macbound"],
+                    "changepwd": value["changepwd"],
+                    "id": value.get("id") or "",
+                    # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
+                }
+                list.append(user)
+        # 1.1 将list_account获取的信息，通过luigi任务同步到supabase
+        print("====start build luigi, list = " + json.dumps(list))
+        luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
+        # 2. 通过supabase的user_traffic_view读取用户流量信息，包括下列字段:
+        # gateway_name
+        # username
+        # uptraffic
+        # downtraffic
+        # group
+        # online
+        # datelimit
+        # 2.1 从supabase的user_traffic_view中获取用户流量信息
+        r = supabase.table("user_traffic_view").select("*").execute()
+        data = []
+        for item in r.data:
+            print("====get_account_list, item = " + str(item))
+            # 2.2 遍历r.data，将r.data中的数据转换为list
+            if item.get("delete_mark") is not None:
+                continue
+            data.append({
+                "gateway_name": item["gateway_name"],
+                "username": item["username"],
+                "total_traffic": get_total_traffic(item),
+                "group": item["group"],
+                "online": item["online"],
+                "datelimit": item["datelimit"],
+            })
+        # 2.2 将r.data返回
+        return { "data": data }
 
 @DB.post("/get_stats", tags=["DB"])
 async def get_stats():
