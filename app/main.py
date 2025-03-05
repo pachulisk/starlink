@@ -45,7 +45,7 @@ async def timeout_middleware(request: Request, call_next):
         "/upload_config": 100000,
         "/sync_traffics": 100000,
     }
-    timeout = 10
+    timeout = 1000
     if request.url.path in long_timeout_urls:
         timeout = long_timeout_urls[request.url.path]
     try:
