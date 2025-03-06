@@ -177,7 +177,7 @@ async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
                     val = {
                         "period": v.get("period"),
                         "threshold": v.get("threshold"),
-                        "exceed": v.get("threshold"),
+                        "exceed": v.get("exceed"),
                         "id": v.get("id"),
                         "remark": v.get("remark")
                     }
