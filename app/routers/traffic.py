@@ -3,7 +3,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import get_gateway_by_id, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import get_basic_rpc_result, get_gateway_by_id, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime
 import json
@@ -154,3 +154,33 @@ async def get_user_traffic(query: GetGWTrafficParam):
                 "happendate": to_date(d["happendate"])
             })
         return {"data": get_data_with_format(list, format)}
+    
+class GetbandwidthStrategyParam(BaseModel):
+    gwid: str
+
+@traffic.post("/get_bandwidth_strategy", tags=["tarffic"])
+async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
+    gwid = query.gwid
+    with gw_login(gwid) as sdk_obj:
+        # 读取配置文件wfilter-isp
+        config_key ="wfilter-isp"
+        p = sdk_obj.config_load(config_key)
+        p = get_basic_rpc_result(p)
+        if p is None:
+            return { "data": [] }
+        else:
+            p = p["values"]
+            result = []
+            for k, v in p.items():
+                item_type = v.get(".type")
+                if item_type == "bandwidth":
+                    val = {
+                        "period": v.get("period"),
+                        "threshold": v.get("threshold"),
+                        "exceed": v.get("threshold"),
+                        "id": v.get("id"),
+                        "remark": v.get("remark")
+                    }
+                    result.push(val)
+            return { "data": result }
+    

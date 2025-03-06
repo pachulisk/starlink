@@ -17,7 +17,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+from .utils import get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -123,15 +123,6 @@ def compare_supabase_and_gw_lastrow(supabase_data, gw_data):
 
 
 
-def get_basic_rpc_result(data):
-    if data is not None:
-        print(data)
-        if data['result'] is not None:
-            print(data['result'])
-            if len(data['result']) > 1:
-                p = data['result'][1]
-                return p
-    return None
 def get_rpc_result(data):
     p = get_basic_rpc_result(data)
     if p is None:

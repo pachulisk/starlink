@@ -189,3 +189,13 @@ def get_end_of_month(d, hrs=True):
         return f"{date_str} 23:59:59"
     else:
         return date_str
+    
+def get_basic_rpc_result(data):
+    if data is not None:
+        print(data)
+        if data['result'] is not None:
+            print(data['result'])
+            if len(data['result']) > 1:
+                p = data['result'][1]
+                return p
+    return None
