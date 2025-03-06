@@ -158,7 +158,7 @@ async def get_user_traffic(query: GetGWTrafficParam):
 class GetbandwidthStrategyParam(BaseModel):
     gwid: str
 
-@traffic.post("/get_bandwidth_strategy", tags=["tarffic"])
+@traffic.post("/get_bandwidth_strategy", tags=["traffic"])
 async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
     gwid = query.gwid
     with gw_login(gwid) as sdk_obj:
@@ -181,6 +181,6 @@ async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
                         "id": v.get("id"),
                         "remark": v.get("remark")
                     }
-                    result.push(val)
+                    result.append(val)
             return { "data": result }
     
