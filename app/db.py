@@ -1052,40 +1052,25 @@ def get_gw_online_status_by_id(gwid, id):
 @DB.post("/get_device_list", tags=["DB"])
 async def get_device_list(query: GetAccountListQuery):
     gwid = query.gwid
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
-        if sdk.login(address, username, password):
-            r = sdk.list_online_users(1000, "")
-            r = get_basic_rpc_result(r)
-            r = str_strip(r["result"])
-            print(r)
-            r = json.loads(r)
-            r = r["result"]
-            list = []
-            for item in r:
-                device = {}
-                device["ip"] = item["ip"]
-                device["macaddr"] = item["mac"]
-                device["group"] = item["group"]
-                device["up"] = normalize_traffic(item["up"])
-                device["down"] = normalize_traffic(item["down"])
-                device["gwid"] = gwid
-                list.append(device)
-            luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
-            return { "data": list }
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+    with gw_login(gwid) as sdk_obj:
+        r = sdk_obj.list_online_users(1000, "")
+        r = get_basic_rpc_result(r)
+        r = str_strip(r["result"])
+        print(r)
+        r = json.loads(r)
+        r = r["result"]
+        list = []
+        for item in r:
+            device = {}
+            device["ip"] = item["ip"]
+            device["macaddr"] = item["mac"]
+            device["group"] = item["group"]
+            device["up"] = normalize_traffic(item["up"])
+            device["down"] = normalize_traffic(item["down"])
+            device["gwid"] = gwid
+            list.append(device)
+        luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
+        return { "data": list }
 
 def get_total_traffic(item):
     up = item.get("uptraffic") or 0.0
