@@ -10,7 +10,7 @@ router = APIRouter()
 def parse_valid_ipv4(addr):
     ipv4 = ""
     if addr is None:
-        return ipv4
+        return ""
     if addr.startswith("http://"):
         ipv4 = addr[7:]
     elif addr.startswith("https://"):
@@ -61,8 +61,9 @@ def check_online_multi(addrs):
         if len(candidate) > 0:
             valid_ipv4.append(candidate)
             mapping[candidate] = addr
+    print("candidates = ", valid_ipv4)
     # 4. 对于所有valid_ipv4作为地址，传入到ping_multi_hosts
-    multi_ping_result = ping_multi_hosts(candidate)
+    multi_ping_result = ping_multi_hosts(valid_ipv4)
     # 5. 遍历multi_ping_result中的key, 从key反查addr，更新ret
     for key in multi_ping_result.keys():
         addr = mapping.get(key)
