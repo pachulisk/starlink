@@ -32,9 +32,9 @@ def normalize_traffic(traffic):
     traffic_num = traffic
     if traffic is None:
         traffic_num = 0
-    ratio = get_traffic_ratio()
-    if ratio is None:
-        ratio = 1.0
+    # ratio = get_traffic_ratio()
+    # if ratio is None:
+    ratio = 1.3
     return traffic_num * ratio
 
 def is_valid_ipv4(ip):
