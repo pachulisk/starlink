@@ -22,6 +22,7 @@ cfg = Config(env)
 
 def get_traffic_ratio():
     """返回流量乘数"""
+    print(cfg)
     return cfg.TRAFFIC_RATIO
 
 def normalize_traffic(traffic):

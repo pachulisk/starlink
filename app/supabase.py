@@ -15,7 +15,7 @@ key: str = cfg.SUPABASE_KEY
 
 print("url = ", url)
 print("key = ", key)
-
+print("ratio = ", cfg.TRAFFIC_RATIO)
 
 supabase: Client = create_client(url, key)
 
