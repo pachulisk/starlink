@@ -10,6 +10,7 @@ from datetime import datetime, date
 import calendar
 import os
 from .config import Config
+from multiping import multi_ping
 
 from contextlib import contextmanager
 
@@ -77,13 +78,23 @@ def is_url(url):
     except Exception as e:
         return False
 
+def ping_multi_hosts(hosts):
+    addrs = hosts or []
+    responses, no_response = multi_ping(addrs, timeout=0.5, retry=2,
+                                        ignore_lookup_errors=True)
+    if no_response:
+        return {}
+    else:
+        return responses
+    
+
 def ping(host):
     """
     Returns True if host (str) responds to a ping request.
     Remember that a host may not respond to a ping (ICMP) request even if the host name is valid.
     """
-    # if is_url(host) is False:
-    #     return False
+    if is_url(host) is False:
+        return False
     # Option for the number of packets as a function of
     param = '-n' if platform.system().lower()=='windows' else '-c'
 

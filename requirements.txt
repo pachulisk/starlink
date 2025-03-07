@@ -14,3 +14,4 @@ python-dotenv
 chromadb
 luigi
 pandas
+multiping
