@@ -3,17 +3,29 @@ from fastapi import APIRouter
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import ping, normalize_traffic
+from ..utils import is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
 def is_online(ip):
-    # 如果可以ping通，返回"online", 否则返回"offline"
-    if ping(ip):
-        return "online"
+    # 检查ip的格式
+    # 1. 如果以http://或者https://开头，则去掉http://或者https://的部分，检查剩下的部分是否是合法的ipv4地址
+    ipv4 = ""
+    if ip.startswith("http://"):
+        ipv4 = ip[7:]
+    elif ip.startswith("https://"):
+        ipv4 = ip[8:]
     else:
-        return "offline"
-
+        ipv4 = ip
+    # 2. 如果ip不是合法的ipv4地址，则返回"false"
+    if not is_valid_ipv4(ipv4):
+        return False
+    # 3. 如果能ping通，则返回True，否则返回False
+    if ping(ipv4):
+        return True
+    else:
+        return False
+    
 class Gateway(BaseModel):
     name: str
     password: str | None = None
