@@ -80,6 +80,7 @@ def is_url(url):
 
 def ping_multi_hosts(hosts):
     addrs = hosts or []
+    print(hosts)
     responses, no_response = multi_ping(addrs, timeout=0.5, retry=2,
                                         ignore_lookup_errors=True)
     if no_response:
