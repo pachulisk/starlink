@@ -130,7 +130,6 @@ async def read_gateways():
             "client_name": item.get('client_name'),
             "enable_time": item.get('enable_time'),
             "online": is_online(item.get('address')),
-            "online": "false",
             "fleet": item.get('fleet'), 
             "total_traffic": normalize_traffic(total_traffic), # 网关流量
             "device_count": device_count, # 网关设备数
