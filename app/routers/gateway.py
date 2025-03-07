@@ -203,7 +203,7 @@ async def read_gateways():
             "serial_no": item.get('serial_no'),
             "client_name": item.get('client_name'),
             "enable_time": item.get('enable_time'),
-            "online": check_ip_result(item.get("address")),
+            "online": check_ip_result.get(item.get("address")),
             "fleet": item.get('fleet'), 
             "total_traffic": normalize_traffic(total_traffic), # 网关流量
             "device_count": device_count, # 网关设备数
