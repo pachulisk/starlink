@@ -83,6 +83,7 @@ def ping_multi_hosts(hosts):
     print(hosts)
     responses, no_response = multi_ping(addrs, timeout=0.5, retry=2,
                                         ignore_lookup_errors=True)
+    print("responses = ", responses)
     if no_response:
         return {}
     else:
