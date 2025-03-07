@@ -11,6 +11,8 @@ def is_online(ip):
     # 检查ip的格式
     # 1. 如果以http://或者https://开头，则去掉http://或者https://的部分，检查剩下的部分是否是合法的ipv4地址
     ipv4 = ""
+    if ip is None:
+        return False
     if ip.startswith("http://"):
         ipv4 = ip[7:]
     elif ip.startswith("https://"):
