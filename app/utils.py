@@ -28,10 +28,13 @@ def normalize_traffic(traffic):
     """
     归一化流量, 根据流量乘数和流量计算最终归一化的流量数值
     """
+    traffic_num = traffic
+    if traffic is None:
+        traffic_num = 0
     ratio = get_traffic_ratio()
     if ratio is None:
         ratio = 1.0
-    return traffic * ratio
+    return traffic_num * ratio
 
 def is_valid_ipv4(ip):
     """
