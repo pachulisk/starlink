@@ -189,6 +189,7 @@ class TestMultiPingParam(BaseModel):
 
 @traffic.post("/test_multi_ping", tags=["test"])
 async def test_multi_ping(query: TestMultiPingParam):
+    print(query.addr)
     response = ping_multi_hosts(query.addr)
     return { "data": response }
     
