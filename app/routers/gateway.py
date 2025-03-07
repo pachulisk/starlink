@@ -3,9 +3,24 @@ from fastapi import APIRouter
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import is_valid_ipv4, ping, normalize_traffic
+from ..utils import ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
+
+def parse_valid_ipv4(addr):
+    ipv4 = ""
+    if addr is None:
+        return ipv4
+    if addr.startswith("http://"):
+        ipv4 = addr[7:]
+    elif addr.startswith("https://"):
+        ipv4 = addr[8:]
+    else:
+        ipv4 = addr
+    if not is_valid_ipv4(ipv4):
+        return ""
+    else:
+        return ipv4
 
 def is_online(ip):
     # 检查ip的格式
@@ -27,6 +42,44 @@ def is_online(ip):
         return True
     else:
         return False
+def check_online_multi(addrs):
+    # addrs是候选的地址列表。
+    # 需要返回一个kv, key是addrs中的每一个地址，value是True或者False,
+    # True代表online, False代表offline
+    # 1. 检查addrs是否为空，如果为空，直接返回空kv
+    if addrs is None or []:
+        return {}
+    # 2. 构造返回值，初始化为全部false
+    ret = {}
+    for addr in addrs:
+        ret[addr] = False
+    # 3. 从addrs中筛选出合法的ipv4地址，放到valid_ipv4中
+    valid_ipv4 = []
+    mapping = {}
+    for addr in addrs:
+        candidate = parse_valid_ipv4(addr)
+        if candidate.length > 0:
+            valid_ipv4.append(candidate)
+            mapping[candidate] = addr
+    # 4. 对于所有valid_ipv4作为地址，传入到ping_multi_hosts
+    multi_ping_result = ping_multi_hosts(candidate)
+    # 5. 遍历multi_ping_result中的key, 从key反查addr，更新ret
+    for key in multi_ping_result.keys():
+        addr = mapping.get(key)
+        if addr is None:
+            continue
+        ret[addr] = True
+    # 6. 返回ret
+    return ret
+
+class TestMultiPingParam(BaseModel):
+    addr: list[str]
+
+@router.post("/test_multi_ping", tags=["test"])
+async def test_multi_ping(query: TestMultiPingParam):
+    print(query.addr)
+    response = check_online_multi(query.addr)
+    return { "data": response }
     
 class Gateway(BaseModel):
     name: str

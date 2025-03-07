@@ -184,12 +184,5 @@ async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
                     result.append(val)
             return { "data": result }
     
-class TestMultiPingParam(BaseModel):
-    addr: list[str]
 
-@traffic.post("/test_multi_ping", tags=["test"])
-async def test_multi_ping(query: TestMultiPingParam):
-    print(query.addr)
-    response = ping_multi_hosts(query.addr)
-    return { "data": response }
     
