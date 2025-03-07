@@ -58,7 +58,7 @@ def check_online_multi(addrs):
     mapping = {}
     for addr in addrs:
         candidate = parse_valid_ipv4(addr)
-        if candidate.length > 0:
+        if len(candidate) > 0:
             valid_ipv4.append(candidate)
             mapping[candidate] = addr
     # 4. 对于所有valid_ipv4作为地址，传入到ping_multi_hosts
