@@ -103,6 +103,7 @@ def get_bandwidth_strategy_impl(gwid:str):
                         "remark": v.get("remark")
                     }
                     result.append(val)
+            return result
 
 @traffic.post("/get_gw_traffic", tags=["traffic"])
 async def get_gw_traffic(query: GetGWTrafficParam):
