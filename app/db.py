@@ -1090,6 +1090,7 @@ async def get_account_list(query: GetAccountListQuery):
         data.append({
             "gateway_name": item["gateway_name"],
             "username": item["username"],
+            "userid": item.get("userid"),
             "total_traffic": get_total_traffic(item),
             "group": item["group"],
             "online": item["online"],
