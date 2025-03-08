@@ -184,7 +184,7 @@ class GetbandwidthStrategyParam(BaseModel):
 @traffic.post("/get_bandwidth_strategy", tags=["traffic"])
 async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
     gwid = query.gwid
-    result = await get_bandwidth_strategy_impl(gwid)
+    result = get_bandwidth_strategy_impl(gwid)
     return { "data": result }
 
 class TestBatchSyncStrategy(BaseModel):
@@ -193,7 +193,8 @@ class TestBatchSyncStrategy(BaseModel):
 @traffic.post("/test_batch_sync_strategy", tags=["test"])
 async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     gwid = query.gwid
-    strategy_list = await get_bandwidth_strategy_impl(gwid)
+    strategy_list = get_bandwidth_strategy_impl(gwid)
+    print(strategy_list)
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
