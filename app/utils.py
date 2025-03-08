@@ -135,6 +135,42 @@ def batch_update_gw_strategy(strategy_list):
     response = supabase.table(TABLE_NAME).upsert(list).execute()
     return response
 
+def batch_update_gw_group(group_list):
+    """
+    将策略列表数据批量upsert到Supabase的gw_groups表,同步下列域:
+    1. gwid
+    2. id
+    3. global_id = gwid_id
+    4. name
+    5. virtual
+    6. alias
+    7. alias_zh_cn
+    8. aliaz_en_us
+    9. index
+    10. type
+    11. anonymous
+    """
+    TABLE_NAME = "gw_groups"
+    list = []
+    for item in group_list:
+        r = {}
+        gwid = item.get("gwid")
+        id = item.get("id")
+        r["gwid"] = gwid
+        r["id"] = id
+        r["global_id"] = f"{gwid}_{id}"
+        r["name"] = item["name"]
+        r["virtual"] = item["virtual"]
+        r["alias"] = item["alias"]
+        r["alias_zh_cn"] = item["alias_zh_cn"]
+        r["alias_en_us"] = item["alias_en_us"]
+        r["index"] = item["index"]
+        r["type"] = item["type"]
+        r["anonymous"] = item["anonymous"]
+        list.append(r)
+    response = supabase.table(TABLE_NAME).upsert(list).execute()
+    return response
+
 def haskv(type, id, key):
     """
     判断gw_kv表中是否存在type和id对应的key
