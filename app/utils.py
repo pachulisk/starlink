@@ -122,9 +122,11 @@ def batch_update_gw_strategy(strategy_list):
     list = []
     for item in strategy_list:
         r = {}
-        r["gwid"] = item["gwid"]
-        r["id"] = item["id"]
-        r["strategy_id"] = f"{item["gwid"]}_{item["id"]}"
+        gwid = item.get("gwid")
+        id = item.get("id")
+        r["gwid"] = gwid
+        r["id"] = id
+        r["strategy_id"] = f"{gwid}_{id}"
         r["period"] = item["period"]
         r["threshold"] = item["threshold"]
         r["exceed"] = item["exceed"]
