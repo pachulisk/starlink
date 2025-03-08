@@ -159,14 +159,14 @@ def batch_update_gw_group(group_list):
         r["gwid"] = gwid
         r["id"] = id
         r["global_id"] = f"{gwid}_{id}"
-        r["name"] = item["name"]
-        r["virtual"] = item["virtual"]
-        r["alias"] = item["alias"]
-        r["alias_zh_cn"] = item["alias_zh_cn"]
-        r["alias_en_us"] = item["alias_en_us"]
-        r["index"] = item["index"]
-        r["type"] = item["type"]
-        r["anonymous"] = item["anonymous"]
+        r["name"] = item.get("name")
+        r["virtual"] = item.get("virtual")
+        r["alias"] = item.get("alias")
+        r["alias_zh_cn"] = item.get("alias_zh_cn")
+        r["alias_en_us"] = item.get("alias_en_us")
+        r["index"] = item.get("index")
+        r["type"] = item.get("type")
+        r["anonymous"] = item.get("anonymous")
         list.append(r)
     response = supabase.table(TABLE_NAME).upsert(list).execute()
     return response
