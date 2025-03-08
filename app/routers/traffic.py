@@ -96,6 +96,7 @@ def get_bandwidth_strategy_impl(gwid:str):
                 item_type = v.get(".type")
                 if item_type == "bandwidth":
                     val = {
+                        "gwid": gwid,
                         "period": v.get("period"),
                         "threshold": v.get("threshold"),
                         "exceed": v.get("exceed"),
