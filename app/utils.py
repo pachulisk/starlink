@@ -270,3 +270,36 @@ def get_basic_rpc_result(data):
                 p = data['result'][1]
                 return p
     return None
+
+# 从网关设备sdk中读取用户列表
+def get_gw_users_list(gwid: str):
+    with gw_login(gwid) as sdk_obj:
+        p = sdk_obj.list_account()
+        print("====list_account, p = " + str(p))
+        p = get_basic_rpc_result(p)
+        print("====list_account, get_basic_rpc_result p = ", str(p))
+        p = p["values"]
+        print("====list_account, value p = ", str(p))
+        
+        lst = []   
+        for key, value in p.items():
+            if value[".type"] == "wfuser" and key != "admin":
+                print("====list_account, value = ", str(value))
+                user = {
+                    "gwid": gwid,
+                    "username": value["username"],
+                    "remark": value.get("remark") or "",
+                    "pppoe": value["pppoe"],
+                    "webauth": value["webauth"],
+                    "static": value["static"],
+                    "staticip": value["staticip"],
+                    "datelimit": value["datelimit"],
+                    "group": value["group"],
+                    "logins": value["logins"],
+                    "macbound": value["macbound"],
+                    "changepwd": value["changepwd"],
+                    "id": value.get("id") or "",
+                    # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
+                }
+                lst.append(user)
+        return lst
