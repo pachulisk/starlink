@@ -212,6 +212,8 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
         section = userid
         values = {"remark": build_remark(sid)}
         result = sdk_obj.config_set(cfgname, section, values)
+        # 应用配置更新
+        sdk_obj.config_apply()
         print("result = ", result)
         # 启动luigi任务，同步用户表到supabase
         tasks = [
