@@ -11,19 +11,6 @@ import pandas as pd
 
 traffic = APIRouter()
 
-class SyncTableTask(BaseModel):
-    table_name: str
-    gwid: str
-    column: str
-
-
-async def sync_table(query: SyncTableTask):
-  """
-  同步网关的流量数据到supabase
-  """
-  column = query.column or "happendate"
-  gwid = query.gwid
-  table_name = query.table_name
 
 async def perform_task(task_str: str):
   print("perform_task_celery: {}".format(task_str))
