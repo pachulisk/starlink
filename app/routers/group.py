@@ -14,6 +14,23 @@ group = APIRouter()
 class GetGWGroupParam(BaseModel):
     gwid: str
 
+def get_group_alias(v):
+    if v is None:
+        return ""
+    elif v.get("alias_zh_cn") is not None:
+        return v.get("alias_zh_cn")
+    else:
+        return v.get("alias")
+
+def get_virtual(v):
+    virtual = v.get("virtual")
+    if v is None:
+        return False
+    elif virtual is None:
+        return False
+    else:
+        return virtual
+
 def get_gw_group_impl(gwid:str):
     with gw_login(gwid) as sdk_obj:
         # 读取配置文件wfilter-isp
@@ -36,6 +53,8 @@ def get_gw_group_impl(gwid:str):
                         "index": v.get(".index"),
                         "anonymous": v.get(".anonymous"),
                         "type": v.get(".type"),
+                        "alias": get_group_alias(v),
+                        "virtual": get_virtual(v),
                         "global_id": f"{gwid}_{v.get('id')}",
                         "name": v.get(".name"),
                     }
