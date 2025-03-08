@@ -81,7 +81,7 @@ def get_data_with_format(data, format):
     else:
         return data
     
-def get_bandwidth_strategy(gwid:str):
+def get_bandwidth_strategy_impl(gwid:str):
     with gw_login(gwid) as sdk_obj:
         # 读取配置文件wfilter-isp
         config_key ="wfilter-isp"
@@ -184,7 +184,7 @@ class GetbandwidthStrategyParam(BaseModel):
 @traffic.post("/get_bandwidth_strategy", tags=["traffic"])
 async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
     gwid = query.gwid
-    result = get_bandwidth_strategy(gwid)
+    result = await get_bandwidth_strategy_impl(gwid)
     return { "data": result }
 
 class TestBatchSyncStrategy(BaseModel):
@@ -193,7 +193,7 @@ class TestBatchSyncStrategy(BaseModel):
 @traffic.post("/test_batch_sync_strategy", tags=["test"])
 async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     gwid = query.gwid
-    strategy_list = get_bandwidth_strategy(gwid)
+    strategy_list = await get_bandwidth_strategy_impl(gwid)
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
