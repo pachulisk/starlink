@@ -12,7 +12,7 @@ from .routers import auth
 from . import db, task
 from .routers import auth2, traffic
 from .routers import account, weather
-from .routers import user
+from .routers import user, group
 from .utils import get_gateway_by_id
 
 import time
@@ -81,6 +81,7 @@ app.include_router(weather.weather)
 app.include_router(auth2.auth2)
 app.include_router(user.user)
 app.include_router(traffic.traffic)
+app.include_router(group.group)
 
 
 class ListVirtualGroupRequest(BaseModel):
