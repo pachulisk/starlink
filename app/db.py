@@ -17,7 +17,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+from .utils import get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1076,77 +1076,28 @@ async def get_account_list(query: GetAccountListQuery):
     """
     # 1. 获取gwid
     gwid = query.gwid
-    with gw_login(gwid) as sdk_obj:
-        p = sdk_obj.list_account()
-        print("====list_account, p = " + str(p))
-        p = get_basic_rpc_result(p)
-        print("====list_account, get_basic_rpc_result p = ", str(p))
-        p = p["values"]
-        print("====list_account, value p = ", str(p))
-        # r = sdk.list_online_users(1000, "")
-        # r = get_basic_rpc_result(r)
-        # r = str_strip(r["result"])
-        # print(r)
-        # r = json.loads(r)
-        # r = r["result"]
-        # kv = {}
-        # for u in r:
-        #     account = u["account"]
-        #     account = urllib.parse.quote_plus(account)
-        #     kv[account] = True
-
-        # 1. 遍历list_account的结果，将结果转换为list
-        list = []   
-        for key, value in p.items():
-            if value[".type"] == "wfuser" and key != "admin":
-                print("====list_account, value = ", str(value))
-                user = {
-                    "gwid": gwid,
-                    "username": value["username"],
-                    "remark": value.get("remark") or "",
-                    "pppoe": value["pppoe"],
-                    "webauth": value["webauth"],
-                    "static": value["static"],
-                    "staticip": value["staticip"],
-                    "datelimit": value["datelimit"],
-                    "group": value["group"],
-                    "logins": value["logins"],
-                    "macbound": value["macbound"],
-                    "changepwd": value["changepwd"],
-                    "id": value.get("id") or "",
-                    # "online": str(get_gw_online_status_by_id(gwid, value["id"]))
-                }
-                list.append(user)
-        # 1.1 将list_account获取的信息，通过luigi任务同步到supabase
-        print("====start build luigi, list = " + json.dumps(list))
-        luigi.build([UpsertUsersToSupabase(json.dumps(list))], local_scheduler=True)
-        # 2. 通过supabase的user_traffic_view读取用户流量信息，包括下列字段:
-        # gateway_name
-        # username
-        # uptraffic
-        # downtraffic
-        # group
-        # online
-        # datelimit
-        # 2.1 从supabase的user_traffic_view中获取用户流量信息
-        r = supabase.table("user_traffic_view").select("*").execute()
-        data = []
-        for item in r.data:
-            print("====get_account_list, item = " + str(item))
-            # 2.2 遍历r.data，将r.data中的数据转换为list
-            if item.get("delete_mark") is not None:
-                continue
-            data.append({
-                "gateway_name": item["gateway_name"],
-                "username": item["username"],
-                "total_traffic": get_total_traffic(item),
-                "group": item["group"],
-                "online": item["online"],
-                "datelimit": item["datelimit"],
-                "remark": item.get("remark") # 套餐名称
-            })
-        # 2.2 将r.data返回
-        return { "data": data }
+    lst = get_gw_users_list(gwid)
+    print("====start build luigi, list = " + json.dumps(lst))
+    luigi.build([UpsertUsersToSupabase(json.dumps(lst))], local_scheduler=True)
+    # 2. 查user_traffic_view
+    r = supabase.table("user_traffic_view").select("*").execute()
+    data = []
+    for item in r.data:
+        print("====get_account_list, item = " + str(item))
+        # 2.2 遍历r.data，将r.data中的数据转换为list
+        if item.get("delete_mark") is not None:
+            continue
+        data.append({
+            "gateway_name": item["gateway_name"],
+            "username": item["username"],
+            "total_traffic": get_total_traffic(item),
+            "group": item["group"],
+            "online": item["online"],
+            "datelimit": item["datelimit"],
+            "remark": item.get("remark") # 套餐名称
+        })
+    # 2.2 将r.data返回
+    return { "data": data }
 
 @DB.post("/get_stats", tags=["DB"])
 async def get_stats():
