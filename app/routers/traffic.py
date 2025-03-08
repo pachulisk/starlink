@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
+import luigi
 from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
@@ -8,6 +9,7 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 import pandas as pd
+from ..tasks.sync_user import SyncGwUsers, ReadGwUsers 
 
 traffic = APIRouter()
 
@@ -187,4 +189,34 @@ async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
-    
+
+class UpdateUserTrafficStrategyQuery(BaseModel):
+    gwid: str
+    userid: str
+    sid: str    
+
+def build_remark(sid):
+    return f"ISP-1-{sid}"
+
+@traffic.post("/update_user_traffic_strategy", tags=["traffic"])
+async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
+    gwid = query.gwid
+    userid = query.userid
+    sid = query.sid
+    with gw_login(gwid) as sdk_obj:
+        # $values = "{\"enabled\":\"false\"}";    //把规则状态改成不启用
+        # $result = $ngf->config_set( "wfilter-appcontrol",  "rule12345", $values );
+        # echo "config_set:$result";
+        # config_set(self, cfgname, section, values):
+        cfgname = "wfilter-account"
+        section = userid
+        values = {"remark": build_remark(sid)}
+        result = sdk_obj.config_set(cfgname, section, values)
+        print("result = ", result)
+        # 启动luigi任务，同步用户表到supabase
+        tasks = [
+            SyncGwUsers(),
+            ReadGwUsers(gwid=gwid),
+        ]
+        luigi.build(tasks, local_scheduler=True)
+        return { "data": result }
