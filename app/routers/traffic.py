@@ -194,7 +194,7 @@ class TestBatchSyncStrategy(BaseModel):
 async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     gwid = query.gwid
     strategy_list = get_bandwidth_strategy_impl(gwid)
-    print(strategy_list)
+    print("strategy_list = ", strategy_list)
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
