@@ -215,8 +215,7 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
         print("result = ", result)
         # 启动luigi任务，同步用户表到supabase
         tasks = [
-            SyncGwUsers(),
-            ReadGwUsers(gwid=gwid),
+            SyncGwUsers(gwid=gwid),
         ]
         luigi.build(tasks, local_scheduler=True)
         return { "data": result }

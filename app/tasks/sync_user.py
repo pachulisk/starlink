@@ -108,9 +108,10 @@ class SyncGwUsers(luigi.Task):
     参数说明：
     - users_json: 需要upsert的用户列表（JSON字符串格式）
     """
+    gwid = luigi.Parameter()
     def requires(self):
         # 定义此任务依赖的任务
-        return ReadGwUsers()
+        return ReadGwUsers(gwid=self.gwid)
 
     def run(self):
         # 读取上一个任务生成的数据文件
