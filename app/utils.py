@@ -114,6 +114,25 @@ def upsert_user(user):
     response = supabase.table(TABLE_NAME).upsert(user).execute()
     return response
 
+def batch_update_gw_strategy(strategy_list):
+    """
+    将策略列表数据批量upsert到Supabase的gw_strategy表
+    """
+    TABLE_NAME = "gw_bandwidth_strategy"
+    list = []
+    for item in strategy_list:
+        r = {}
+        r["gwid"] = item["gwid"]
+        r["id"] = item["id"]
+        r["strategy_id"] = f"{item["gwid"]}_{item["id"]}"
+        r["period"] = item["period"]
+        r["threshold"] = item["threshold"]
+        r["exceed"] = item["exceed"]
+        r["remark"] = item["remark"]
+        list.append(r)
+    response = supabase.table(TABLE_NAME).upsert(list).execute()
+    return response
+
 def haskv(type, id, key):
     """
     判断gw_kv表中是否存在type和id对应的key
