@@ -1095,7 +1095,8 @@ async def get_account_list(query: GetAccountListQuery):
             "group": item["group"],
             "online": item["online"],
             "datelimit": item["datelimit"],
-            "remark": item.get("remark") # 套餐名称
+            "remark": item.get("remark"), # 套餐名称
+            "sid": item.get("sid")
         })
     # 2.2 将r.data返回
     return { "data": data }
