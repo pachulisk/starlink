@@ -4,7 +4,7 @@ from app.supabase import supabase, to_date,str_strip
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import batch_update_gw_group, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import batch_update_users_group, batch_update_gw_group, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime
 import json
@@ -124,17 +124,7 @@ def decode_username(username):
     # 都没有匹配，返回空字符串
     return ""
 
-
-
-# 获取所有的用户和分组
-@group.post("/list_user_with_groups", tags=["group"])
-async def list_user_with_groups(query: ListUserWithGroupsQuery):
-    """
-    列出网关下的所有组(group)，然后列出每一个组关联的用户
-    输入参数: query.gwid: 网关ID
-    返回值: 一个列表data, 每一项包括用户的id、用户所在组的id，用户所在组的名称
-    """
-    gwid = query.gwid
+async def list_user_with_groups_impl(gwid: str):
     #1. 使用get_gw_group_impl获取已有的组信息
     group_list = get_gw_group_impl(gwid)
     #2. 设置返回值为data,一个空数组
@@ -170,4 +160,33 @@ async def list_user_with_groups(query: ListUserWithGroupsQuery):
                 data.append(u)
     # 打印data的信息
     print(f"list_user_with_groups: Final data: {data}")
+    return data
+
+# 获取所有的用户和分组
+@group.post("/list_user_with_groups", tags=["group"])
+async def list_user_with_groups(query: ListUserWithGroupsQuery):
+    """
+    列出网关下的所有组(group)，然后列出每一个组关联的用户
+    输入参数: query.gwid: 网关ID
+    返回值: 一个列表data, 每一项包括用户的id、用户所在组的id，用户所在组的名称
+    """
+    gwid = query.gwid
+    #1. 使用get_gw_group_impl获取已有的组信息
+    data = await list_user_with_groups_impl(gwid)
     return { "data": data }
+
+class SyncUserVirtualGroupQuery(BaseModel):
+    gwid: str
+
+# sync_user_virtual_group 将virtual_group的用户关系内容，同步到gw_users表中
+@group.post("/sync_user_virtual_group", tags=["group"])
+async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
+    gwid = query.gwid
+    # 1. 调用list_user_with_groups获取用户和group之间的关系
+    user_list = list_user_with_groups_impl(gwid)
+    # 1.5 打印user_list
+    print("sync_user_virtual_group: user_list = f{user_list}")
+    # 2. 调用batch_update_users_group
+    result = batch_update_users_group(user_list)
+    print(f"sync_user_virtual_group: batch update users group, result is {result}")
+    return {"data": "success"}
