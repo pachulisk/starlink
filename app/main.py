@@ -86,10 +86,12 @@ app.include_router(group.group)
 
 class ListVirtualGroupRequest(BaseModel):
     gwid: str
+    groupid: str
 
 @app.post("/list_virtual_group")
 async def list_virtual_group(request: ListVirtualGroupRequest):
     gwid = request.gwid
+    groupid = request.groupid
     gw = await get_gateway_by_id(gwid)
     if gw is None or len(gw.data) == 0:
         raise HTTPException(status_code=400, detail="gateway not found")
@@ -99,7 +101,7 @@ async def list_virtual_group(request: ListVirtualGroupRequest):
     sdk = SDK()
     try:
         if sdk.login(address, username, password):
-            virtual_groups = sdk.list_virtual_group("")  # 传入空字符串作为 groupid
+            virtual_groups = sdk.list_virtual_group(groupid)  # 传入空字符串作为 groupid
             return {"virtual_groups": virtual_groups}
         else:
             raise HTTPException(status_code=401, detail="登录失败")
