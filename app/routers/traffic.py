@@ -214,7 +214,17 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
         result = sdk_obj.config_set(cfgname, section, values)
         # 应用配置更新
         sdk_obj.config_apply()
+        # 更新supabase上的gw_users表中，对应的用户名称
+        # global_id = gwid + "_" + userid
+        global_id = f"{gwid}_{userid}"
+        TABLE_NAME = "gw_users"
+        kv = {
+            "remark": build_remark(sid)
+        }
+        # 使用global_id来更新supabase
+        response = (supabase.table(TABLE_NAME).update(kv).eq("global_id", global_id)).execute()
         print("result = ", result)
+        print("response = ", response)
         # 启动luigi任务，同步用户表到supabase
         tasks = [
             SyncGwUsers(gwid=gwid),
