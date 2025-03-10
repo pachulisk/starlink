@@ -161,6 +161,7 @@ async def list_user_with_groups(query: ListUserWithGroupsQuery):
                 userid = user.get("user")
                 userid = decode_username(userid)
                 u = {
+                    "gwid": gwid,
                     "userid": userid,
                     "groupid": group_id,
                     "group_global_id": global_id,
