@@ -13,7 +13,7 @@ from . import db, task
 from .routers import auth2, traffic
 from .routers import account, weather
 from .routers import user, group
-from .utils import get_gateway_by_id
+from .utils import gw_login, get_gateway_by_id
 
 import time
 from fastapi import Request, Response
@@ -92,23 +92,9 @@ class ListVirtualGroupRequest(BaseModel):
 async def list_virtual_group(request: ListVirtualGroupRequest):
     gwid = request.gwid
     groupid = request.groupid
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
-        if sdk.login(address, username, password):
-            virtual_groups = sdk.list_virtual_group(groupid)  # 传入空字符串作为 groupid
-            return {"virtual_groups": virtual_groups}
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+    with gw_login(gwid) as sdk_obj:
+        virtual_groups = sdk_obj.list_virtual_group(groupid)  # 传入空字符串作为 groupid
+        return {"virtual_groups": virtual_groups}
 
 @app.get("/")
 def read_root():
