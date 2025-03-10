@@ -183,7 +183,7 @@ class SyncUserVirtualGroupQuery(BaseModel):
 async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
     gwid = query.gwid
     # 1. 调用list_user_with_groups获取用户和group之间的关系
-    user_list = list_user_with_groups_impl(gwid)
+    user_list = await list_user_with_groups_impl(gwid)
     # 1.5 打印user_list
     print("sync_user_virtual_group: user_list = f{user_list}")
     # 2. 调用batch_update_users_group
