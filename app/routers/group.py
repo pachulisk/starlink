@@ -145,12 +145,13 @@ async def list_user_with_groups(query: ListUserWithGroupsQuery):
         alias = get_group_alias(group)
         group_id = group.get("id")
         # 打印debug信息
-        print(f"list_user_with_groups: Processing group: {global_id}, alias: {alias}, id: {id}")
+        print(f"list_user_with_groups: Processing group: {global_id}, alias: {alias}, id: {group_id}")
         # 使用list_virtual_group来获取组关联的用户
         with gw_login(gwid) as sdk_obj:
             result = sdk_obj.list_virtual_group(group_id)
             r = get_basic_rpc_result(result)
             r = str_strip(r.get("result"))
+            r = json.loads(r)
             # 打印r的信息
             print(f"list_user_with_groups: Users in group {global_id}: {r}")
             # 获取users
