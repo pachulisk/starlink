@@ -171,6 +171,35 @@ def batch_update_gw_group(group_list):
     response = supabase.table(TABLE_NAME).upsert(list).execute()
     return response
 
+def batch_update_users_group(user_group_list):
+    """
+    将用户和表之间的关系，更新到gw_users表中的virtual_group字段。
+    输入参数: 
+    "gwid": gwid,
+    "userid": userid,
+    "groupid": group_id,
+    "group_global_id": global_id,
+    "group_name": alias
+    """
+    TABLENAME = "gw_users"
+    target_list = []
+    for ug in user_group_list:
+        # gwid
+        gwid = ug.get("gwid")
+        userid = ug.get("userid")
+
+        # 计算global_id
+        global_id = f"{gwid}_{userid}"
+        group_global_id = ug.get("group_global_id")
+        item = {
+            "virtual_group": group_global_id
+        }
+        response = (
+            supabase.table(TABLENAME).update(item).eq("global_id", global_id).execute()
+        )
+        target_list.append(response)
+    return { "data": target_list }
+
 def haskv(type, id, key):
     """
     判断gw_kv表中是否存在type和id对应的key
