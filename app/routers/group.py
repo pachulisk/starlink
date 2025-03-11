@@ -242,7 +242,7 @@ async def update_user_group(query: UpdateUserGroupQuery):
         # 4. 将组内容增加到gw_users的virtual_group列
         TABLENAME = "gw_users"
         global_group_id = f"{gwid}_{groupid}"
-        if action_remove is False:
+        if action_remove is True:
             # 如果是删除，则组id为None
             global_group_id = None
         item = {
