@@ -185,7 +185,7 @@ async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
     # 1. 调用list_user_with_groups获取用户和group之间的关系
     user_list = await list_user_with_groups_impl(gwid)
     # 1.5 打印user_list
-    print("sync_user_virtual_group: user_list = f{user_list}")
+    print(f"sync_user_virtual_group: user_list = {user_list}")
     # 2. 调用batch_update_users_group
     result = batch_update_users_group(user_list)
     print(f"sync_user_virtual_group: batch update users group, result is {result}")
