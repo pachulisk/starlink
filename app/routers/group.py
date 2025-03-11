@@ -231,7 +231,7 @@ async def update_user_group(query: UpdateUserGroupQuery):
             return { "data": "success" }
         # 3. 然后调用add_virtual_group增加指定组，然后apply
         # 时间为30000 * 1440
-        timeout = 30000 * 1440
+        timeout = 3000 * 1440
         # name = encode_username(username)
         name = f"CN={username},DC=wflocal"
         print(f"start calling add_virtual_group, groupid = {groupid}, name = {name}, timeout = {timeout}")
