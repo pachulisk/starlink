@@ -188,14 +188,13 @@ def batch_update_users_group(user_group_list):
         gwid = ug.get("gwid")
         userid = ug.get("userid")
 
-        # 计算global_id
-        global_id = f"{gwid}_{userid}"
+        # group_global_id
         group_global_id = ug.get("group_global_id")
         item = {
             "virtual_group": group_global_id
         }
         response = (
-            supabase.table(TABLENAME).update(item).eq("global_id", global_id).execute()
+            supabase.table(TABLENAME).update(item).eq("username", userid).eq("gwid", gwid).execute()
         )
         target_list.append(response)
     return { "data": target_list }
