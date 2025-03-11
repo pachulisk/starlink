@@ -232,7 +232,9 @@ async def update_user_group(query: UpdateUserGroupQuery):
         # 3. 然后调用add_virtual_group增加指定组，然后apply
         # 时间为30000 * 1440
         timeout = 30000 * 1440
-        result = sdk_obj.add_virtual_group(groupid, encode_username(username), timeout)
+        name = encode_username(username)
+        print(f"start calling add_virtual_group, groupid = {groupid}, name = {name}, timeout = {timeout}")
+        result = sdk_obj.add_virtual_group(groupid, name, timeout)
         print(f"update_user_group: add_virtual_group result = {result}")
         # 4. 将组内容增加到gw_users的virtual_group列
         TABLENAME = "gw_users"
