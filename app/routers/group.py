@@ -219,27 +219,32 @@ async def update_user_group(query: UpdateUserGroupQuery):
     username = query.username
     groupid = query.groupid
     print(f"update_user_group: gwid = {gwid}, username = {username}, groupid = {groupid}")
-    
+    action_remove = False
+    if groupid is None:
+        action_remove = True
+    if len(groupid) <= 0:
+        action_remove = True
+
     with gw_login(gwid) as sdk_obj:
         # 1. 首先调用remove_virtual_group移除用户的所有组，然后apply
         result = sdk_obj.rm_virtual_group(encode_username(username))
         print(f"update_user_group: rm_virtual_group result = {result}")
-        # 2. 如果groupid为空则直接返回success
-        if groupid is None:
-            return { "data": "success" }
-        if len(groupid) <= 0:
-            return { "data": "success" }
+        
         # 3. 然后调用add_virtual_group增加指定组，然后apply
         # 时间为30000 * 1440
-        timeout = 3000 * 1440
-        # name = encode_username(username)
-        name = f"CN={username},DC=wflocal"
-        print(f"start calling add_virtual_group, groupid = {groupid}, name = {name}, timeout = {timeout}")
-        result = sdk_obj.add_virtual_group(groupid, name, timeout)
-        print(f"update_user_group: add_virtual_group result = {result}")
+        if action_remove is False:
+            timeout = 3000 * 1440
+            # name = encode_username(username)
+            name = f"CN={username},DC=wflocal"
+            print(f"start calling add_virtual_group, groupid = {groupid}, name = {name}, timeout = {timeout}")
+            result = sdk_obj.add_virtual_group(groupid, name, timeout)
+            print(f"update_user_group: add_virtual_group result = {result}")
         # 4. 将组内容增加到gw_users的virtual_group列
         TABLENAME = "gw_users"
         global_group_id = f"{gwid}_{groupid}"
+        if action_remove is False:
+            # 如果是删除，则组id为None
+            global_group_id = None
         item = {
             "virtual_group": global_group_id
         }
