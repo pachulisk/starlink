@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 import urllib
 from app.supabase import supabase, to_date,str_strip
@@ -71,13 +72,16 @@ async def get_gw_group(query: GetGWGroupParam):
 class TestBatchSyncGroups(BaseModel):
     gwid: str
 
-@group.post("/test_batch_sync_group", tags=["test"])
-async def test_batch_sync_group(query: TestBatchSyncGroups):
-    gwid = query.gwid
+async def batch_sync_group_task(gwid: str):
     group_list = get_gw_group_impl(gwid)
     print("group_list = ", group_list)
     response = batch_update_gw_group(group_list)
     return { "data": response }
+
+@group.post("/test_batch_sync_group", tags=["test"])
+async def test_batch_sync_group(query: TestBatchSyncGroups):
+    gwid = query.gwid
+    return await batch_sync_group_task(gwid)
 
 class ListUserWithGroupsQuery(BaseModel):
     gwid: str
@@ -178,11 +182,7 @@ async def list_user_with_groups(query: ListUserWithGroupsQuery):
 class SyncUserVirtualGroupQuery(BaseModel):
     gwid: str
 
-# sync_user_virtual_group 将virtual_group的用户关系内容，同步到gw_users表中
-@group.post("/sync_user_virtual_group", tags=["group"])
-async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
-    gwid = query.gwid
-    # 1. 调用list_user_with_groups获取用户和group之间的关系
+async def sync_user_virtual_group_task(gwid: str):
     user_list = await list_user_with_groups_impl(gwid)
     # 1.5 打印user_list
     print(f"sync_user_virtual_group: user_list = {user_list}")
@@ -190,3 +190,58 @@ async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
     result = batch_update_users_group(user_list)
     print(f"sync_user_virtual_group: batch update users group, result is {result}")
     return {"data": "success"}
+
+
+# sync_user_virtual_group 将virtual_group的用户关系内容，同步到gw_users表中
+@group.post("/sync_user_virtual_group", tags=["group"])
+async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
+    gwid = query.gwid
+    res = await asyncio.gather(batch_sync_group_task(gwid), sync_user_virtual_group_task(gwid))
+    return {"data": "success"}
+
+class UpdateUserGroupQuery(BaseModel):
+    gwid: str
+    username: str
+    groupid: str | None
+
+@group.post("/update_user_group", tags=["group"])
+async def update_user_group(query: UpdateUserGroupQuery):
+    """
+    更新用户所属组
+    输入参数: 
+    1. gwid: 必选，网关id
+    2. username: 必选，用户名称
+    3. groupid: 可选，网关的id(例如punish)，如果groupid为空，则将用户移除出所有的组
+    返回值：
+    1. {”data”: “success”}
+    """
+    gwid = query.gwid
+    username = query.username
+    groupid = query.groupid
+    print(f"update_user_group: gwid = {gwid}, username = {username}, groupid = {groupid}")
+    
+    with gw_login(gwid) as sdk_obj:
+        # 1. 首先调用remove_virtual_group移除用户的所有组，然后apply
+        result = sdk_obj.rm_virtual_group(encode_username(username))
+        print(f"update_user_group: rm_virtual_group result = {result}")
+        # 2. 如果groupid为空则直接返回success
+        if groupid is None:
+            return { "data": "success" }
+        if len(groupid) <= 0:
+            return { "data": "success" }
+        # 3. 然后调用add_virtual_group增加指定组，然后apply
+        # 时间为30000 * 1440
+        timeout = 30000 * 1440
+        result = sdk_obj.add_virtual_group(groupid, encode_username(username), timeout)
+        print(f"update_user_group: add_virtual_group result = {result}")
+        # 4. 将组内容增加到gw_users的virtual_group列
+        TABLENAME = "gw_users"
+        global_group_id = f"{gwid}_{groupid}"
+        item = {
+            "virtual_group": global_group_id
+        }
+        response = (
+            supabase.table(TABLENAME).update(item).eq("username", username).eq("gwid", gwid).execute()
+        )
+        print(f"update_user_group: result = {response}")
+        return {"data": result}
