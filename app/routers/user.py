@@ -146,7 +146,6 @@ async def add_user(param: AddUserParam):
         "id": value.get("id"),
         "gwid": gwid,
         "username": value.get("username"),
-        "password": value.get("password"),
         "remark": value.get("remark"),
         "pppoe": value.get("pppoe"),
         "webauth": value.get("webauth"),
