@@ -166,7 +166,7 @@ async def add_user(param: AddUserParam):
     
     # 更新group_id
     query = UpdateUserGroupQuery(gwid=gwid, username=username, groupid=group_id)
-    await update_user_group_impl(query)
+    update_user_group_impl(query)
     return {"data": ret}
 
 class DeleteUserParam(BaseModel):
