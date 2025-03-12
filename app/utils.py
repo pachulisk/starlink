@@ -336,3 +336,18 @@ def get_gw_users_list(gwid: str):
 def get_milliseconds():
     milis = int(round(time.time() * 1000))
     return milis
+
+def yyyymmdd(date_str:str):
+    try:
+        datetime.strptime(date_str, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
+    
+def is_future_date(date_str):
+    try:
+        given_date = datetime.strptime(date_str, '%Y-%m-%d')
+        current_date = datetime.now()
+        return given_date > current_date
+    except ValueError:
+        return False
