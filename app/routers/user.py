@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.supabase import supabase
 from ..sdk import SDK
-from ..utils import get_milliseconds, gw_login, get_gateway_by_id, gw_login
+from ..utils import is_future_date, yyyymmdd, get_milliseconds, gw_login, get_gateway_by_id, gw_login
 from .group_service import update_user_group_impl, UpdateUserGroupQuery
 from pydantic import BaseModel
 import json
@@ -224,3 +224,41 @@ async def delete_user(param: DeleteUserParam):
         # 5. 在supabase的gw_users表中，将username,id相关匹配到的行的删除标记置为true
         mark_user_as_deleted(gwid, param.username)
         return {"data": user_info}
+    
+class UpdateUserDatelimitParam(BaseModel):
+    gwid: str
+    userid: str
+    datelimit: str
+
+@user.post("/update_user_datelimit", tags=["user"])
+async def update_user_datelimit(param: UpdateUserDatelimitParam):
+    """
+    更新用户datelimit
+    """
+    gwid = param.gwid
+    userid = param.userid
+    datelimit = param.datelimit
+    # 0. 检查gwid和username是否为空
+    if gwid == "" or userid == "":
+        raise HTTPException(status_code=400, detail="gwid和userid不能为空")
+    # 1. 检查datelimit是否符合yyyy-mm-dd的格式
+    if yyyymmdd(datelimit) is False:
+        # 不是合法的日期格式，返回错误
+        raise HTTPException(status_code=400, detail="日期格式错误")
+    # 2. 如果日期不是未来日期，返回错误
+    if is_future_date(datelimit) is False:
+        raise HTTPException(status_code=400, detail="日期应该是未来日期")
+    # 3. 登陆sdk, 使用config_set和config_apply来设置
+    cfgname = "wfilter-account"
+    section = userid
+    values = {"datelimit": datelimit}
+    with gw_login(gwid) as sdk_obj:
+        print("update_user_datelimit: cfgname = {cfgname}, section = {section}, values = {values}")
+        result = sdk_obj.config_set(cfgname, section, values)
+        # 应用配置更新
+        sdk_obj.config_apply()
+    # 4. 更新supabase的gw_users表中的datelimit字段
+    TABLE_NAME = "gw_users"
+    r = {"datelimit": datelimit}
+    response = (supabase.table(TABLE_NAME).update(r).eq("gwid", gwid).eq("id", userid).execute())
+    return { "data": response }
