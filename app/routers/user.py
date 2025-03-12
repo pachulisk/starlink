@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.supabase import supabase
 from ..sdk import SDK
 from ..utils import gw_login, get_gateway_by_id, gw_login
+from .group_service import update_user_group_impl, UpdateUserGroupQuery
 from pydantic import BaseModel
 import json
 
@@ -14,7 +15,8 @@ class AddUserParam(BaseModel):
     confirm_password: str
     group: str
     datelimit: str
-
+    group_id: str # 组id,(例如punish)可选，如果为空则用户没有任何组
+    sid: str # 策略id（例如bandwidth1234567），必选
 
 # 检查用户名是否在supabase的gw_users表中存在
 def check_username_exists(gwid: str, username: str):
@@ -70,21 +72,26 @@ async def add_user(param: AddUserParam):
     },
     """
     gwid = param.gwid
+    username = param.username
     password = param.password
     group = param.group
+    # group_id可以为空
+    group_id = param.group_id
     datelimit = param.datelimit
     confirm_password = param.confirm_password
+    # 策略id不能为空
+    sid = param.sid
     # 0. 检查用户名是否为空
-    if param.username == "":
+    if username == "":
         raise HTTPException(status_code=400, detail="用户名不能为空")
     # 1. 检查用户名是否已经存在
-    if check_username_exists(gwid, param.username):
+    if check_username_exists(gwid, username):
         raise HTTPException(status_code=400, detail="用户名已存在")
     # 2. 检查密码是否一致
-    if param.password != param.confirm_password:
+    if password != confirm_password:
         raise HTTPException(status_code=400, detail="密码不一致")
     # 3. 检查密码是否为空
-    if param.password == "":
+    if password == "":
         raise HTTPException(status_code=400, detail="密码不能为空")
     # 4. 检查datelimit是否为空，如果不为空，则设置为2034-10-01
     if param.datelimit == "":
@@ -92,18 +99,23 @@ async def add_user(param: AddUserParam):
     # 5. 检查group是否为空，如果不为空，则设置为0
     if param.group == "":
         group = "0"
-    
+    # 6.检查bandwidth是否为空，如果不为空则返回错误
+    if param.sid == "":
+        raise HTTPException(status_code=400, detail="策略id不能为空")
+    # 增加remark - 设置策略
+    remark = f"ISP-1-{sid}"
+    ret = None
     with gw_login(gwid) as sdk_obj:
         cfgname = 'wfilter-account'
         type = 'wfuser'
-        key = param.username
+        key = username
         value = {
             "id": key,
             ".anonymous": False,
             ".type": "wfuser",
-            "username": param.username,
-            "password": param.password,
-            "remark": "ISP-1-bandwidth"+key,
+            "username": username,
+            "password": password,
+            "remark": remark,
             "pppoe": "false",
             "webauth": "true",
             "static": "false",
@@ -114,12 +126,46 @@ async def add_user(param: AddUserParam):
             "macbound": "0",
             "changepwd": "false",
         }
+        # 打印value
+        print("add_user: value = " + str(value))
         # 调用sdk
         result1 = sdk_obj.config_add(cfgname, type, key, value)
         print("result1 = " + str(result1))
         result2 = sdk_obj.config_apply()
         print("result2 = " + str(result2))
-        return {"data": value}
+        # 最终结果赋值
+        ret = value
+    # 在supabase的gw_users表中，upsert一条记录
+    TABLENAME = "gw_users"
+    r = {
+        "global_id": f"{gwid}_{value.get('id')}",
+        "id": value.get("id"),
+        "gwid": gwid,
+        "username": value.get("username"),
+        "password": value.get("password"),
+        "remark": value.get("remark"),
+        "pppoe": value.get("pppoe"),
+        "webauth": value.get("webauth"),
+        "static": value.get("static"),
+        "staticip": value.get("staticip"),
+        "datelimit": value.get("datelimit"),
+        "logins": value.get("logins"),
+        "macbound": value.get("macbound"),
+        "changepwd": value.get("changepwd"),
+        "online": False,
+        "delete_mark": False,
+        "virtual_group": group_id,
+    }
+    # 打印日志
+    print("add_user 同步supabase: " + str(r))
+    # 插入supabase记录
+    response = (supabase.table(TABLENAME).upsert(r).execute())
+    print("add_user 同步supabase结果" + response)
+    
+    # 更新group_id
+    query = UpdateUserGroupQuery(gwid=gwid, username=username, groupid=group_id)
+    await update_user_group_impl(query)
+    return {"data": ret}
 
 class DeleteUserParam(BaseModel):
     gwid: str
