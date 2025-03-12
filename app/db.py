@@ -1085,7 +1085,8 @@ async def get_account_list(query: GetAccountListQuery):
     for item in r.data:
         print("====get_account_list, item = " + str(item))
         # 2.2 遍历r.data，将r.data中的数据转换为list
-        if item.get("delete_mark") is not None:
+        delete_mark = item.get("delete_mark")
+        if delete_mark is True:
             continue
         data.append({
             "gateway_name": item["gateway_name"],
