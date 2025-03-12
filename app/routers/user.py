@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.supabase import supabase
 from ..sdk import SDK
-from ..utils import gw_login, get_gateway_by_id, gw_login
+from ..utils import get_milliseconds, gw_login, get_gateway_by_id, gw_login
 from .group_service import update_user_group_impl, UpdateUserGroupQuery
 from pydantic import BaseModel
 import json
@@ -42,6 +42,10 @@ def get_user_info_by_gwid_username(gwid: str, username: str):
 def mark_user_as_deleted(gwid: str, username: str):
     response = supabase.table('gw_users').update({'delete_mark': "true"}).eq('gwid', gwid).eq('username', username).execute()
     return response.data is not None and len(response.data) > 0
+
+def gen_user_id():
+    timestamp = get_milliseconds()
+    return f"wfuser{timestamp}"
 
 @user.post("/add_user", tags=["user"])
 async def add_user(param: AddUserParam):
@@ -105,12 +109,12 @@ async def add_user(param: AddUserParam):
     # 增加remark - 设置策略
     remark = f"ISP-1-{sid}"
     ret = None
+    user_id = gen_user_id()
     with gw_login(gwid) as sdk_obj:
         cfgname = 'wfilter-account'
         type = 'wfuser'
-        key = username
         value = {
-            "id": key,
+            "id": user_id,
             ".anonymous": False,
             ".type": "wfuser",
             "username": username,
@@ -129,7 +133,7 @@ async def add_user(param: AddUserParam):
         # 打印value
         print("add_user: value = " + str(value))
         # 调用sdk
-        result1 = sdk_obj.config_add(cfgname, type, key, value)
+        result1 = sdk_obj.config_add(cfgname, type, user_id, value)
         print("result1 = " + str(result1))
         result2 = sdk_obj.config_apply()
         print("result2 = " + str(result2))

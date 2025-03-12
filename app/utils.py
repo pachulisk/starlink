@@ -3,6 +3,7 @@ from app.supabase import supabase
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
 import re
+import time
 import ipaddress
 from fastapi import HTTPException
 from .sdk import SDK
@@ -331,3 +332,7 @@ def get_gw_users_list(gwid: str):
                 }
                 lst.append(user)
         return lst
+    
+def get_milliseconds():
+    milis = int(round(time.time() * 1000))
+    return milis
