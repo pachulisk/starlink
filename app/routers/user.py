@@ -163,7 +163,6 @@ async def add_user(param: AddUserParam):
     print("add_user 同步supabase: " + str(r))
     # 插入supabase记录
     response = (supabase.table(TABLENAME).upsert(r).execute())
-    print("add_user 同步supabase结果" + response)
     
     # 更新group_id
     query = UpdateUserGroupQuery(gwid=gwid, username=username, groupid=group_id)
