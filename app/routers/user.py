@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.supabase import supabase
 from ..sdk import SDK
-from ..utils import get_gateway_by_id, gw_login
+from ..utils import gw_login, get_gateway_by_id, gw_login
 from pydantic import BaseModel
 import json
 
@@ -93,56 +93,33 @@ async def add_user(param: AddUserParam):
     if param.group == "":
         group = "0"
     
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
-        # 使用config.add(cfgname, type, key, value)增加新的账户
-        # cfgname = ‘wfilter-account’
-        # type = ‘wfuser’
-        # key = ‘username’
-        # value = {”username=user1”, “password=<pswdxxx>”, “remark=ISP-1-bandwidth1733974887482”,  “pppoe=false”, “webauth=true”, “static=false”, “staticip= “, datelimit=”2034-10-01”, group=”0”, logins=”0”, macbounds=”0”, changepwd=”false”, id=xxx}
-        if sdk.login(address, username, password):
-          cfgname = 'wfilter-account'
-          type = 'wfuser'
-          key = param.username
-          value = {
-              "id": key,
-              ".anonymous": False,
-              ".type": "wfuser",
-              "username": param.username,
-              "password": param.password,
-              "remark": "ISP-1-bandwidth"+key,
-              "pppoe": "false",
-              "webauth": "true",
-              "static": "false",
-              "staticip": " ",
-              "datelimit": datelimit,
-              "group": group,
-              "logins": "0",
-              "macbound": "0",
-              "changepwd": "false",
-          }
-          # 调用sdk
-          result1 = sdk.config_add(cfgname, type, key, value)
-          print("result1 = " + str(result1))
-          result2 = sdk.config_apply()
-          print("result2 = " + str(result2))
-          return {"data": value}
-        else:
-          raise HTTPException(status_code=401, detail="登录失败")
-    except json.JSONDecodeError:
-        return {"error": "Invalid JSON format"}
-    except Exception as e:
-        print("error: " + str(e))
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+    with gw_login(gwid) as sdk_obj:
+        cfgname = 'wfilter-account'
+        type = 'wfuser'
+        key = param.username
+        value = {
+            "id": key,
+            ".anonymous": False,
+            ".type": "wfuser",
+            "username": param.username,
+            "password": param.password,
+            "remark": "ISP-1-bandwidth"+key,
+            "pppoe": "false",
+            "webauth": "true",
+            "static": "false",
+            "staticip": " ",
+            "datelimit": datelimit,
+            "group": group,
+            "logins": "0",
+            "macbound": "0",
+            "changepwd": "false",
+        }
+        # 调用sdk
+        result1 = sdk_obj.config_add(cfgname, type, key, value)
+        print("result1 = " + str(result1))
+        result2 = sdk_obj.config_apply()
+        print("result2 = " + str(result2))
+        return {"data": value}
 
 class DeleteUserParam(BaseModel):
     gwid: str
