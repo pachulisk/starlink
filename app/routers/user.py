@@ -47,6 +47,9 @@ def gen_user_id():
     timestamp = get_milliseconds()
     return f"wfuser{timestamp}"
 
+def get_default_password():
+    return "<#254ef761e0fe2110#>"
+
 @user.post("/add_user", tags=["user"])
 async def add_user(param: AddUserParam):
     """
@@ -83,6 +86,8 @@ async def add_user(param: AddUserParam):
     group_id = param.group_id
     datelimit = param.datelimit
     confirm_password = param.confirm_password
+    # [TODO]只能设置默认123456的password
+    default_password = get_default_password()
     # 策略id不能为空
     sid = param.sid
     # 0. 检查用户名是否为空
@@ -118,7 +123,7 @@ async def add_user(param: AddUserParam):
             ".anonymous": False,
             ".type": "wfuser",
             "username": username,
-            "password": password,
+            "password": default_password,
             "remark": remark,
             "pppoe": "false",
             "webauth": "true",
