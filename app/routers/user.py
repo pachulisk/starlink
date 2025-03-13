@@ -267,3 +267,39 @@ async def update_user_datelimit(param: UpdateUserDatelimitParam):
     r = {"datelimit": datelimit}
     response = (supabase.table(TABLE_NAME).update(r).eq("gwid", gwid).eq("id", userid).execute())
     return { "data": response }
+
+class UpdateUserPasswordParam(BaseModel):
+    gwid: str
+    userid: str
+    password: str
+
+@user.post("/update_user_password", tags=["user"])
+async def update_user_password(param: UpdateUserPasswordParam):
+    """
+    更新用户password
+    """
+    gwid = param.gwid
+    userid = param.userid
+    password = param.password
+    # 0. 检查gwid和username是否为空
+    if gwid == "" or userid == "":
+        raise HTTPException(status_code=400, detail="gwid和userid不能为空")
+    # 1. 检查datelimit是否符合yyyy-mm-dd的格式
+    # 2. password不能为空
+    if password == "":
+        raise HTTPException(status_code=400, detail="密码不能为空")
+    # 3. 登陆sdk, 使用config_set和config_apply来设置
+    cfgname = "wfilter-account"
+    section = userid
+    values = {"password": password}
+    with gw_login(gwid) as sdk_obj:
+        print("update_user_password: cfgname = {cfgname}, section = {section}, values = {values}")
+        result = sdk_obj.config_set(cfgname, section, values)
+        # 应用配置更新
+        sdk_obj.config_apply()
+    # 4. 更新supabase的gw_users表中的datelimit字段
+    # TABLE_NAME = "gw_users"
+    # r = {"datelimit": password}
+    # response = (supabase.table(TABLE_NAME).update(r).eq("gwid", gwid).eq("id", userid).execute())
+    return { "data": True }
+
