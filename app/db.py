@@ -164,9 +164,6 @@ class LineIterable(BaseIterable):
         else:
             raise StopIteration
 
-
-
-
 def build_sync_task(table_name, query_result):
     count = 0
     tasks = []
@@ -191,6 +188,7 @@ class CreateSyncTaskQuery(BaseModel):
     table_name: str
     gwid: str
     column: str
+    full_sync: bool = False
 
 
 # 创建同步任务
@@ -203,11 +201,18 @@ async def create_sync_task(query: CreateSyncTaskQuery):
     column = query.column or "happendate"
     gwid = query.gwid
     table_name = query.table_name
+    full_sync = query.full_sync
     supabase_last_row = await get_supabase_table_latest_row(table_name, gwid, column)
     gw_last_row = await get_gw_table_latest_row(table_name, gwid, column)
     print(f"supabase_last_row is {supabase_last_row}, gw_last_row is {gw_last_row}")
     should_update = compare_supabase_and_gw_lastrow(supabase_last_row, str_strip(get_rpc_result(gw_last_row['result'])))
     # 2. 如果最后一行的值相同则无需创建同步任务
+    # 判断是否需要全量更新
+    # 如果full_sync为True，则should_update为true, supabase_last_row为None
+    if full_sync is True:
+        should_update = True
+        supabase_last_row = None
+    
     if not should_update:
         return { "tasks": [], "count": 0 }
     else:
