@@ -258,7 +258,7 @@ async def post_sync_tasks(query: PostSyncTasks):
     column = query.column or "happendate"
     gwid = query.gwid
     table_name = query.table_name
-    q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column)
+    q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column, full_sync=True)
     task_ret = await create_sync_task(q)
     tasks = task_ret.get("tasks")
     cmds = []
