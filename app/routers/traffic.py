@@ -116,6 +116,7 @@ async def get_gw_traffic(query: GetGWTrafficParam):
         .lte("happendate", end_time_str)
         .execute())
     # 4. 归集结果
+    print(f"[DEBUG][get_gw_traffic]:response.data = f{response.data}")
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format)}
     else:
