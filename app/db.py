@@ -1086,7 +1086,7 @@ async def get_account_list(query: GetAccountListQuery):
     print("====start build luigi, list = " + json.dumps(lst))
     luigi.build([UpsertUsersToSupabase(json.dumps(lst))], local_scheduler=True)
     # 2. 查user_traffic_view
-    r = supabase.table("user_traffic_view").eq("gwid", gwid).select("*").order("userid", desc=True).execute()
+    r = supabase.table("user_traffic_view").select("*").eq("gwid", gwid).neq("delete_mark", "true").order("userid", desc=True).execute()
     print(f"[DEBUG][get_account_list]: user_traffic_view = {r}")
     data = []
     for item in r.data:
