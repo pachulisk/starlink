@@ -1081,6 +1081,7 @@ async def get_account_list(query: GetAccountListQuery):
     """
     # 1. 获取gwid
     gwid = query.gwid
+    print(f"[DEBUG][get_account_list]: gwid = {gwid}")
     lst = get_gw_users_list(gwid)
     print("====start build luigi, list = " + json.dumps(lst))
     luigi.build([UpsertUsersToSupabase(json.dumps(lst))], local_scheduler=True)
