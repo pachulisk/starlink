@@ -4,7 +4,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime
 import json
@@ -175,8 +175,30 @@ class GetbandwidthStrategyParam(BaseModel):
 
 @traffic.post("/get_bandwidth_strategy", tags=["traffic"])
 async def get_bandwidth_strategy(query: GetbandwidthStrategyParam):
+    """
+    获取带宽策略
+    输入：gwid=网关id，可选。如果网关id不为空，则查询具体网关上的带宽策略；如果为空则返回所有网关的带宽策略。
+    输出: { data: [r1, r2, ..., rn] }
+    """
     gwid = query.gwid
-    result = get_bandwidth_strategy_impl(gwid)
+    result = []
+    if is_not_empty(gwid):
+        result = get_bandwidth_strategy_impl(gwid)
+    else:
+        # 从gw_bandwidth_strategy表中读取所有的策略
+        TABLE_NAME = "gw_bandwidth_strategy"
+        r = supabase.table(TABLE_NAME).select("*").execute()
+        for item in r.data:
+            gw_id = item.get("gwid")
+            val = {
+                "gwid": gw_id,
+                "period": item.get("period"),
+                "threshold": item.get("threshold"),
+                "exceed": item.get("exceed"),
+                "id": item.get("id"),
+                "remark": item.get("remark")
+            }
+            result.append(val)
     return { "data": result }
 
 class TestBatchSyncStrategy(BaseModel):
