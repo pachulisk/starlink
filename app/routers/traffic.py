@@ -97,6 +97,14 @@ def get_bandwidth_strategy_impl(gwid:str):
 
 @traffic.post("/get_gw_traffic", tags=["traffic"])
 async def get_gw_traffic(query: GetGWTrafficParam):
+    """
+    get_gw_traffic：获取网关流量
+    输入：gwid=网关id，如果为空则获取所有网关流量数据
+    输入:start_date=开始日期，yyyy-mm-dd
+    输入:end_date=结束日期，yyyy-mm-dd
+    输入：format=返回数据格式，csv/json，默认json
+    输出：流量数据，包含up, down, total, happendate字段
+    """
     # 1. 获取gwid, user和日期date
     # 2. 如果date为空，则默认查询时间设置为本年本月；否则按照date查询
     # 3. 从supabase查询hourreport表，筛选日期在date的月份范围内
