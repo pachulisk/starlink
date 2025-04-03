@@ -1077,7 +1077,7 @@ def get_total_traffic(item):
 async def get_account_list(query: GetAccountListQuery):
     """
     POST /get_account_list获取用户列表
-    参数1： gwid=当前网关id，必须
+    参数1： gwid=当前网关id，非必须。当gwid为空字符串时候，显示所有用户。
     """
     # 1. 获取gwid
     gwid = query.gwid
