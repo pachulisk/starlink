@@ -17,7 +17,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import is_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+from .utils import is_empty, is_not_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1081,7 +1081,7 @@ async def get_account_list(query: GetAccountListQuery):
     """
     # 1. 获取gwid
     gwid = query.gwid
-    if is_empty(gwid):
+    if is_not_empty(gwid):
         print(f"[DEBUG][get_account_list]: gwid = {gwid}")
         lst = get_gw_users_list(gwid)
         print("====start build luigi, list = " + json.dumps(lst))
@@ -1100,7 +1100,7 @@ async def get_account_list(query: GetAccountListQuery):
         delete_mark = item.get("delete_mark")
         if delete_mark is True or delete_mark == "true":
             continue
-        if is_empty(gwid) is False and item.get("gwid") != gwid:
+        if is_not_empty(gwid) and item.get("gwid") != gwid:
             continue
         data.append({
             "gateway_name": item["gateway_name"],
