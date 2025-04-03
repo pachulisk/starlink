@@ -1130,9 +1130,8 @@ async def get_stats():
     # 3. 查询supabase中的fleet_count，获取舰船数量count值
     r = supabase.table("fleet_count").select("count").execute()
     fleet_count = 0
-    if len(r.data) > 0:
-        #获取count
-        fleet_count = r.data[0]["count"]
+    for line in r.data:
+        fleet_count += line.get("count")
     
     # 4. 总流量:查询supabase中的total_traffic，获取up和down字段
     r = supabase.table("total_traffic").select("up, down").execute()
