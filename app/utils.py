@@ -25,6 +25,11 @@ cfg = Config(env)
 def is_empty(param):
     return param is None or len(param) <= 0
 
+def is_not_empty(param):
+    if param is None:
+        return False
+    return len(param) > 0
+
 def get_traffic_ratio():
     """返回流量乘数"""
     return cfg.TRAFFIC_RATIO
