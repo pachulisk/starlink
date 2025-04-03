@@ -107,14 +107,19 @@ async def get_gw_traffic(query: GetGWTrafficParam):
     start_time_str = times[0]
     end_time_str = times[1]
     format = query.format
-    
-    response = (supabase
-        .table('hourreport')
-        .select("*")
-        .eq("gwid", gwid)
-        .gte("happendate", start_time_str)
-        .lte("happendate", end_time_str)
-        .execute())
+
+    TABLE_NAME = "hourreport"
+    response = None
+    if is_empty(gwid):
+        response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
+    else:
+        response = (supabase
+            .table(TABLE_NAME)
+            .select("*")
+            .eq("gwid", gwid)
+            .gte("happendate", start_time_str)
+            .lte("happendate", end_time_str)
+            .execute())
     # 4. 归集结果
     print(f"[DEBUG][get_gw_traffic]:response.data = f{response.data}")
     if len(response.data) <= 0:
