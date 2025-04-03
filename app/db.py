@@ -1124,9 +1124,8 @@ async def get_stats():
     # 2. 查询supabase中的client_count，获取客户数量count值
     r = supabase.table("client_count").select("count").execute()
     client_count = 0
-    if len(r.data) > 0:
-        #获取count
-        client_count = r.data[0]["count"]
+    for line in r.data:
+        client_count += line.get("count")
     # 3. 查询supabase中的fleet_count，获取舰船数量count值
     r = supabase.table("fleet_count").select("count").execute()
     fleet_count = 0
