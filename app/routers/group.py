@@ -79,8 +79,9 @@ async def get_gw_group(query: GetGWGroupParam):
         # 使用supabase获取所有的group和网关
         r = supabase.table("gw_groups").select("*").execute()
         for item in r.data:
+            gw_id = item.get("gwid")
             val = {
-                "gwid": item.get("gwid"),
+                "gwid": gw_id,
                 "id": item.get("id"),
                 "aliaz_en_us": item.get("aliaz_en_us"),
                 "alias_zh_cn": item.get("alias_zh_cn"),
@@ -89,7 +90,7 @@ async def get_gw_group(query: GetGWGroupParam):
                 "type": item.get("type"),
                 "alias": get_group_alias(item),
                 "virtual": get_virtual(item),
-                "global_id": f"{item.get("gwid")}_{item.get('id')}",
+                "global_id": f"{gw_id}_{item.get('id')}",
                 "name": item.get("name"),
             }
             result.append(val)
