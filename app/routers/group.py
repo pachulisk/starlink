@@ -66,6 +66,11 @@ def get_gw_group_impl(gwid:str):
         
 @group.post("/get_gw_group", tags=["group"])
 async def get_gw_group(query: GetGWGroupParam):
+    """
+    get_gw_group: 获取网关的所属组信息。
+    输入: gwid=网关id，可选。如果gwid有值则返回对应的组参数；如果gwid没有值，则返回所有网关的组参数。
+    输出：{ data: [item1, item2, ..., itemx ]}
+    """
     gwid = query.gwid
     result = []
     if is_not_empty(gwid):
