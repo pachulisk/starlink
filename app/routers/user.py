@@ -303,3 +303,15 @@ async def update_user_password(param: UpdateUserPasswordParam):
     # response = (supabase.table(TABLE_NAME).update(r).eq("gwid", gwid).eq("id", userid).execute())
     return { "data": True }
 
+@user.post("/get_client_list", tags=["user"])
+async def get_client_list():
+    """
+    获取客户列表
+    输入参数：无
+    输出参数: { data: [{name: "client1"}, {name: "client2"}]}
+    """
+    r = supabase.table("client_count").select("client_name").execute()
+    data = []
+    for line in r.data:
+        data.append({"name": line.get("client_name")})
+    return { "data": data }
