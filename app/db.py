@@ -17,7 +17,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+from .utils import is_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1081,12 +1081,17 @@ async def get_account_list(query: GetAccountListQuery):
     """
     # 1. 获取gwid
     gwid = query.gwid
-    print(f"[DEBUG][get_account_list]: gwid = {gwid}")
-    lst = get_gw_users_list(gwid)
-    print("====start build luigi, list = " + json.dumps(lst))
-    luigi.build([UpsertUsersToSupabase(json.dumps(lst))], local_scheduler=True)
+    if is_empty(gwid):
+        print(f"[DEBUG][get_account_list]: gwid = {gwid}")
+        lst = get_gw_users_list(gwid)
+        print("====start build luigi, list = " + json.dumps(lst))
+        luigi.build([UpsertUsersToSupabase(json.dumps(lst))], local_scheduler=True)
     # 2. 查user_traffic_view
-    r = supabase.table("user_traffic_view").select("*").eq("gwid", gwid).order("userid", desc=True).execute()
+    r = None
+    if is_empty(gwid):
+        r = supabase.table("user_traffic_view").select("*").order("userid", desc=True).execute()
+    else:
+        r = supabase.table("user_traffic_view").select("*").eq("gwid", gwid).order("userid", desc=True).execute()
     print(f"[DEBUG][get_account_list]: user_traffic_view = {r}")
     data = []
     for item in r.data:
@@ -1095,7 +1100,7 @@ async def get_account_list(query: GetAccountListQuery):
         delete_mark = item.get("delete_mark")
         if delete_mark is True or delete_mark == "true":
             continue
-        if item.get("gwid") != gwid:
+        if is_empty(gwid) is False and item.get("gwid") != gwid:
             continue
         data.append({
             "gateway_name": item["gateway_name"],
