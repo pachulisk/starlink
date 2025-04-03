@@ -315,3 +315,16 @@ async def get_client_list():
     for line in r.data:
         data.append({"name": line.get("client_name")})
     return { "data": data }
+
+@user.post("/get_fleet_list", tags=["user"])
+async def get_fleet_list():
+    """
+    获取船舶列表
+    输入参数：无
+    输出参数: { data: [{name: "fleet1"}, {name: "fleet2"} ]}
+    """
+    r = supabase.table("fleet_count").select("fleet").execute()
+    data = []
+    for line in r.data:
+        data.append({"name": line.get("fleet")})
+    return {"data": data}
