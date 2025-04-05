@@ -158,14 +158,18 @@ async def get_user_traffic(query: GetGWTrafficParam):
     start_time_str = times[0]
     end_time_str = times[1]
     format = query.format
-    
-    response = (supabase
-        .table('acctreport_view')
-        .select("*")
-        .eq("gwid", gwid)
-        .gte("happendate", start_time_str)
-        .lte("happendate", end_time_str)
-        .execute())
+    TABLE_NAME = "acctreport_view"
+    response = None
+    if is_empty(gwid):
+        response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
+    else:
+        response = (supabase
+            .table(TABLE_NAME)
+            .select("*")
+            .eq("gwid", gwid)
+            .gte("happendate", start_time_str)
+            .lte("happendate", end_time_str)
+            .execute())
     # 4. 归集结果
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format)}
