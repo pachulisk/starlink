@@ -1074,6 +1074,17 @@ async def get_device_list(query: GetAccountListQuery):
     )
     data = r.data
     print(f"[DEBUG][get_device_list]: r.data = {data}")
+    lst = []
+    for item in data:
+        device = {}
+        device["ip"] = item["ip"]
+        device["macaddr"] = item["mac"]
+        device["group"] = item["group"]
+        device["up"] = normalize_traffic(item["up"])
+        device["down"] = normalize_traffic(item["down"])
+        device["gwid"] = gwid
+        lst.append(device)
+
     with gw_login(gwid) as sdk_obj:
         r = sdk_obj.list_online_users(1000, "")
         r = get_basic_rpc_result(r)
@@ -1092,7 +1103,7 @@ async def get_device_list(query: GetAccountListQuery):
             device["gwid"] = gwid
             list.append(device)
         luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
-    return { "data": data }
+    return { "data": lst }
 
 def get_total_traffic(item):
     up = item.get("uptraffic") or 0.0
