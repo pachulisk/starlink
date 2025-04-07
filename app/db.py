@@ -1078,7 +1078,7 @@ async def get_device_list(query: GetAccountListQuery):
     for item in data:
         device = {}
         device["ip"] = item["ip"]
-        device["macaddr"] = item["mac"]
+        device["macaddr"] = item["macaddr"]
         device["group"] = item["group"]
         device["up"] = normalize_traffic(item["up"])
         device["down"] = normalize_traffic(item["down"])
