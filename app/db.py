@@ -958,13 +958,21 @@ async def get_user_bandwidth(query: GetUserBandwidthQuery):
     start_time_str = get_start_of_month(d, True)
     end_time_str = get_end_of_month(d, True)
 
-    response = (supabase
-    .table('acctreport')
-    .select("*")
-    .eq("gwid", gwid)
-    .gte("happendate", start_time_str)
-    .lte("happendate", end_time_str)
-    .execute())
+    if is_empty(gwid):
+        response = (supabase
+        .table('acctreport')
+        .select("*")
+        .gte("happendate", start_time_str)
+        .lte("happendate", end_time_str)
+        .execute())
+    else:
+        response = (supabase
+        .table('acctreport')
+        .select("*")
+        .eq("gwid", gwid)
+        .gte("happendate", start_time_str)
+        .lte("happendate", end_time_str)
+        .execute())
     # 4.归集本月结果 
     if len(response.data) <= 0:
         #
