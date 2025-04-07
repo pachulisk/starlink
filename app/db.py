@@ -1063,6 +1063,7 @@ async def get_device_list(query: GetAccountListQuery):
         .execute()
     )
     data = r.data
+    print(f"[DEBUG][get_device_list]: r.data = {data}")
     with gw_login(gwid) as sdk_obj:
         r = sdk_obj.list_online_users(1000, "")
         r = get_basic_rpc_result(r)
