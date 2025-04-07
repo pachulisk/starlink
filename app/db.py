@@ -463,33 +463,42 @@ def get_total_connection_count(r):
 @DB.post("/get_terminal_and_conns", tags=["DB"])
 async def get_terminal_and_conns(query: GetTerminalAndConnsQuery):
     gwid = query.gwid
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    # get gateway username, password and address
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    total_terminal_count = 0
-    try:
-        if sdk.login(address, username, password):
-            # top = 1000
-            # search = ""
-            result = sdk.list_online_users(1000, "")
-            r = get_basic_rpc_result(result)
-            r = str_strip(r["result"])
-            print(r)
-            r = json.loads(r)
-            total_terminal_count = r["total"]
-            total_conn_count = get_total_connection_count(r["result"])
-            return { "total_terminal": f"{total_terminal_count}", "total_connection_count": f"{total_conn_count}"}
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+    r = (supabase
+        .table("gateway_view")
+        .select("device_count, user_count")
+        .eq("id", gwid)
+        .execute()
+        )
+    total_terminal_count = r.get("device_count")
+    total_connection_count = r.get("user_count")
+    return { "total_terminal": f"{total_terminal_count}", "total_connection_count": f"{total_connection_count}"}
+    # gw = await get_gateway_by_id(gwid)
+    # if gw is None or len(gw.data) == 0:
+    #     raise HTTPException(status_code=400, detail="gateway not found")
+    # # get gateway username, password and address
+    # username = gw.data[0].get('username')
+    # password = gw.data[0].get('password')
+    # address = gw.data[0].get('address')
+    # sdk = SDK()
+    # total_terminal_count = 0
+    # try:
+    #     if sdk.login(address, username, password):
+    #         # top = 1000
+    #         # search = ""
+    #         result = sdk.list_online_users(1000, "")
+    #         r = get_basic_rpc_result(result)
+    #         r = str_strip(r["result"])
+    #         print(r)
+    #         r = json.loads(r)
+    #         total_terminal_count = r["total"]
+    #         total_conn_count = get_total_connection_count(r["result"])
+    #         return { "total_terminal": f"{total_terminal_count}", "total_connection_count": f"{total_conn_count}"}
+    #     else:
+    #         raise HTTPException(status_code=401, detail="登录失败")
+    # except Exception as e:
+    #     raise HTTPException(status_code=400, detail=str(e))
+    # finally:
+    #     sdk.logout()
     
 
 class GetAccountListQuery(BaseModel):
