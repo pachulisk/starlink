@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
@@ -214,6 +214,10 @@ async def read_gateways():
 # 创建
 @router.post("/add_gateway", tags=["gateway"])
 async def create_gateway(gw: Gateway):
+    ip = gw.address
+    online = is_online(ip)
+    if online is False:
+        raise HTTPException(status_code=400, detail="网关不在线")
     res = supabase.table("gateway").insert({
         "name": gw.name,
         "password": gw.password,
