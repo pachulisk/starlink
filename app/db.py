@@ -1106,11 +1106,13 @@ async def get_account_list(query: GetAccountListQuery):
         print("====get_account_list, item = " + str(item))
         # 2.2 遍历r.data，将r.data中的数据转换为list
         delete_mark = item.get("delete_mark")
+        gw_id = item.get("gwid")
         if delete_mark is True or delete_mark == "true":
             continue
         if is_not_empty(gwid) and item.get("gwid") != gwid:
             continue
         data.append({
+            "gwid": gw_id,
             "gateway_name": item["gateway_name"],
             "username": item["username"],
             "userid": item.get("userid"),
