@@ -1056,6 +1056,13 @@ def get_gw_online_status_by_id(gwid, id):
 @DB.post("/get_device_list", tags=["DB"])
 async def get_device_list(query: GetAccountListQuery):
     gwid = query.gwid
+    r = (supabase
+        .table("device_list")
+        .select("*")
+        .eq("gwid", gwid)
+        .execute()
+    )
+    data = r.data
     with gw_login(gwid) as sdk_obj:
         r = sdk_obj.list_online_users(1000, "")
         r = get_basic_rpc_result(r)
@@ -1074,7 +1081,7 @@ async def get_device_list(query: GetAccountListQuery):
             device["gwid"] = gwid
             list.append(device)
         luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
-        return { "data": list }
+    return { "data": data }
 
 def get_total_traffic(item):
     up = item.get("uptraffic") or 0.0
