@@ -238,6 +238,9 @@ async def test_date_and_hour():
     test_datetime = datetime.strptime(test_date, date_format)
     print(test_datetime)
     new_time = test_datetime + timedelta(hours=int(test_hour))
+    supabase.table(TABLE_NAME).insert({
+        "timestamp": new_time
+    }).execute()
     return {"dt": test_datetime, "ndt": new_time}
 
 
