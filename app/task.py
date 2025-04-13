@@ -95,26 +95,27 @@ async def upsert_supabase(id, data):
     keys = data.get("keys") or []
     strategy = data.get("strategy") or "UPSERT"
     # first build query against keys
-    conflict = False
-    if len(keys) > 0:
-        r = supabase.table(table_name).select("*").limit(1)
-        for i in range(len(keys)):
-            r = r.eq(keys[i], table_data[keys[i]])
-        r = r.execute()
-        if len(r.data) > 0:
-            conflict = True
-    if conflict is not True:
-        res = supabase.table(table_name).insert(table_data).execute()
-        return res
-    else:
-        if strategy == "UPSERT":
-            r = supabase.table(table_name).update(table_data)
-            for i in range(len(keys)):
-              r = r.eq(keys[i], table_data[keys[i]])
-            res = r.execute()
-            return res
-        else: # IGNORE
-          return {"data": [], "count": 0 }
+    # conflict = False
+    # if len(keys) > 0:
+    #     r = supabase.table(table_name).select("*").limit(1)
+    #     for i in range(len(keys)):
+    #         r = r.eq(keys[i], table_data[keys[i]])
+    #     r = r.execute()
+    #     if len(r.data) > 0:
+    #         conflict = True
+    # if conflict is not True:
+    #     res = supabase.table(table_name).insert(table_data).execute()
+    #     return res
+    # else:
+    if strategy == "UPSERT":
+        # r = supabase.table(table_name).update(table_data)
+        # for i in range(len(keys)):
+        #   r = r.eq(keys[i], table_data[keys[i]])
+        # res = r.execute()
+        # return res
+        supabase.table(table_name).upsert(table_data)
+    else: # IGNORE
+        return {"data": [], "count": 0 }
 
 
 def get_address_for_gwid(gwid: str):
