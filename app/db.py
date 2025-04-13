@@ -256,10 +256,11 @@ def make_date_and_hour(date, hour):
     return f"{new_dt}"
 
 def update_task_hour(task):
-    happendate = task.get("happendate")
-    hour = task.get("hour")
-    updated_happen_date = make_date_and_hour(happendate, hour)
-    task["happendate"] = updated_happen_date
+    if "happendate" in task and "hour" in task:
+        happendate = task.get("happendate")
+        hour = task.get("hour")
+        updated_happen_date = make_date_and_hour(happendate, hour)
+        task["happendate"] = updated_happen_date
 
 class PostSyncTasks(BaseModel):
     table_name: str
