@@ -6,7 +6,7 @@ from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
 from ..utils import is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import pandas as pd
 from ..tasks.sync_user import SyncGwUsers, ReadGwUsers 
@@ -228,6 +228,17 @@ async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     print("strategy_list = ", strategy_list)
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
+
+@traffic.post("/test_date_and_hour", tags=["test"])
+async def test_date_and_hour():
+    TABLE_NAME = "test_date_and_hour"
+    test_date = "2025-04-01"
+    test_hour = "17"
+    date_format = "%Y-%m-%d"
+    test_datetime = datetime.strptime(test_date, date_format)
+    print(test_datetime)
+    new_time = test_datetime + timedelta(hours=test_hour)
+    return {"dt": test_datetime, "ndt": new_time}
 
 
 class UpdateUserTrafficStrategyQuery(BaseModel):
