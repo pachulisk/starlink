@@ -267,14 +267,7 @@ class PostSyncTasks(BaseModel):
     gwid: str
     column: str
 
-@DB.post("/post_sync_tasks", tags=["tasks"])
-async def post_sync_tasks(query: PostSyncTasks):
-    column = query.column or "happendate"
-    gwid = query.gwid
-    table_name = query.table_name
-    q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column, full_sync=True)
-    task_ret = await create_sync_task(q)
-    tasks = task_ret.get("tasks")
+def build_individual_task_cmds(gwid, table_name, column, tasks):
     cmds = []
     for task in tasks: 
         # 生成sync命令
@@ -284,6 +277,43 @@ async def post_sync_tasks(query: PostSyncTasks):
         # 发送sync命令
         print(f"task  ==== {task}, d === {d}")
         cmds.append(d)
+    return cmds
+
+def build_bulk_task_cmds(gwid, table_name, column, tasks):
+    cmds = []
+    for task in tasks:
+        update_task_hour(task)
+    # 聚合task
+    new_task = []
+    for task in tasks:
+        new_task.append(task)
+    d = build_sync_command(gwid, new_task, table_name, ["gwid", column])
+    cmds.append(d)
+    return cmds
+
+@DB.post("/post_sync_tasks", tags=["tasks"])
+async def post_sync_tasks(query: PostSyncTasks):
+    column = query.column or "happendate"
+    gwid = query.gwid
+    table_name = query.table_name
+    q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column, full_sync=True)
+    task_ret = await create_sync_task(q)
+    tasks = task_ret.get("tasks")
+    
+    bulk_update = True
+    if bulk_update:
+        cmds = build_bulk_task_cmds(gwid, table_name, column, tasks)
+    else:
+        cmds = build_individual_task_cmds(gwid, table_name, column, tasks)
+    # cmds = []
+    # for task in tasks: 
+    #     # 生成sync命令
+    #     update_task_hour(task)
+    #     d = build_sync_command(gwid, task, table_name, ["gwid", column])
+    #     # 修复happendate
+    #     # 发送sync命令
+    #     print(f"task  ==== {task}, d === {d}")
+    #     cmds.append(d)
     # 对于cmds中的命令，开始执行
     result = []
     for cmd in cmds:
