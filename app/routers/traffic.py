@@ -237,7 +237,7 @@ async def test_date_and_hour():
     date_format = "%Y-%m-%d"
     test_datetime = datetime.strptime(test_date, date_format)
     print(test_datetime)
-    new_time = test_datetime + timedelta(hours=test_hour)
+    new_time = test_datetime + timedelta(hours=int(test_hour))
     return {"dt": test_datetime, "ndt": new_time}
 
 
