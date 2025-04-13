@@ -94,6 +94,7 @@ async def upsert_supabase(id, data):
     table_data = data.get("table_data")
     keys = data.get("keys") or []
     strategy = data.get("strategy") or "UPSERT"
+    print(f"upsert_supabase: table_name = {table_name}, keys = {keys}, strategy = {strategy}, table_data = {table_data} ")
     # first build query against keys
     # conflict = False
     # if len(keys) > 0:
@@ -113,7 +114,7 @@ async def upsert_supabase(id, data):
         #   r = r.eq(keys[i], table_data[keys[i]])
         # res = r.execute()
         # return res
-        supabase.table(table_name).upsert(table_data)
+        return supabase.table(table_name).upsert(table_data)
     else: # IGNORE
         return {"data": [], "count": 0 }
 
