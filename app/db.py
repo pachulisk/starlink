@@ -238,7 +238,11 @@ def build_sync_command(gwid, data, table_name, keys):
     # id = str(uuid.uuid4())
     command = "UPSERT_SUPABASE"
     d = {}
-    data["gwid"] = gwid
+    if isinstance(data, list):
+        for item in data:
+            item["gwid"] = gwid
+    else:
+        data["gwid"] = gwid
     d["table_name"] = table_name
     d["table_data"] = data
     d["keys"] = keys
