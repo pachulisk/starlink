@@ -249,10 +249,23 @@ def build_sync_command(gwid, data, table_name, keys):
         "status": "todo"
     }
 
+def make_date_and_hour(date, hour):
+    date_format = "%Y-%m-%d"
+    old_dt = datetime.strptime(date, date_format)
+    new_dt = old_dt + timedelta(hours=int(hour))
+    return f"{new_dt}"
+
+def update_task_hour(task):
+    happendate = task.get("happendate")
+    hour = task.get("hour")
+    updated_happen_date = make_date_and_hour(happendate, hour)
+    task["happendate"] = updated_happen_date
+
 class PostSyncTasks(BaseModel):
     table_name: str
     gwid: str
     column: str
+
 @DB.post("/post_sync_tasks", tags=["tasks"])
 async def post_sync_tasks(query: PostSyncTasks):
     column = query.column or "happendate"
@@ -264,7 +277,9 @@ async def post_sync_tasks(query: PostSyncTasks):
     cmds = []
     for task in tasks: 
         # 生成sync命令
+        update_task_hour(task)
         d = build_sync_command(gwid, task, table_name, ["gwid", column])
+        # 修复happendate
         # 发送sync命令
         print(f"task  ==== {task}, d === {d}")
         cmds.append(d)
