@@ -96,9 +96,9 @@ def to_date(data):
     index = d.find('T')
     if index != -1:
         d = data[:index]
-    print(f"to_date, after process d = {d}")
+    # print(f"to_date, after process d = {d}")
     processed = datetime.strptime(d, "%Y-%m-%d")
-    print(f"processed = {processed}")
+    # print(f"processed = {processed}")
     return processed
 
 def str_strip(data):
