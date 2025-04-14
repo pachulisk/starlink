@@ -154,9 +154,9 @@ async def get_gw_traffic(query: GetGWTrafficParam):
         # 2.1 如果key不存在，则建立一个入口
         # 2.2 如果key存在，则将uptraffic和downtraffic的值加总
         # 3. 获取kv的keys，排序后生成list，将list中的uptraffic、downtraffic、total和happendate处理返回
+        print("[get_gw_traffic]: kv build finished")
         lst = []
-        key_list = sorted(kv.keys())
-        for date_str in key_list:
+        for date_str in sorted(kv):
             value = kv.get(date_str)
             up = value.get("uptraffic")
             down = value.get("downtraffic")
