@@ -133,18 +133,52 @@ async def get_gw_traffic(query: GetGWTrafficParam):
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format)}
     else:
-        list = []
+        # 将同一天的内容归集起来
+        # 1. 建立一个kv,key是日期，value是data
+        kv = {}
+        # 1.5 遍历response.data，拿出每一个数据d
         for d in response.data:
-            up = d["uptraffic"]
-            down = d["downtraffic"]
-            list.append({
-                # "acct": d["acct"],
+            happendate = d.get("happendate")
+            date = to_date(happendate)
+            date_str = date.strftime("%Y-%m-%d")
+            if date_str not in kv:
+                kv[date_str] = {
+                    "uptraffic": 0,
+                    "downtraffic": 0,
+                    "happendate": date_str
+                }
+            kv[date_str]["uptraffic"] += int(d["uptraffic"])
+            kv[date_str]["downtraffic"] += int(d["downtraffic"])
+       
+        # 2. 获取happendate, 将happendate的日期部分拿出来，作为key查询；
+        # 2.1 如果key不存在，则建立一个入口
+        # 2.2 如果key存在，则将uptraffic和downtraffic的值加总
+        # 3. 获取kv的keys，排序后生成list，将list中的uptraffic、downtraffic、total和happendate处理返回
+        lst = []
+        key_list = sorted(kv.keys())
+        for date_str in key_list:
+            value = kv.get(date_str)
+            up = value.get("uptraffic")
+            down = value.get("downtraffic")
+            lst.append({
                 "up": normalize_traffic(up),
                 "down": normalize_traffic(down),
-                "total": f"{normalize_traffic(float(up) + float(down))}",
-                "happendate": to_date(d["happendate"])
+                "total": f"{normalize_traffic(int(up) + int(down))}",
+                "happendate": date_str
             })
         return {"data": get_data_with_format(list, format)}
+        
+        # for d in response.data:
+        #     up = d["uptraffic"]
+        #     down = d["downtraffic"]
+        #     list.append({
+        #         # "acct": d["acct"],
+        #         "up": normalize_traffic(up),
+        #         "down": normalize_traffic(down),
+        #         "total": f"{normalize_traffic(float(up) + float(down))}",
+        #         "happendate": to_date(d["happendate"])
+        #     })
+        # return {"data": get_data_with_format(list, format)}
 
 @traffic.post("/get_user_traffic", tags=["traffic"])
 async def get_user_traffic(query: GetGWTrafficParam):
