@@ -147,7 +147,9 @@ async def get_gw_traffic(query: GetGWTrafficParam):
                     "downtraffic": 0,
                     "happendate": date_str
                 }
-            print(f"[DEBUG]: {date_str}: up = {int(d["uptraffic"])}, down = {int(d["downtraffic"])}")
+            delta_up = int(d["uptraffic"])
+            delta_down = int(d["downtraffic"])
+            print(f"[DEBUG]: {date_str}: up = {delta_up}, down = {delta_down}")
             kv[date_str]["uptraffic"] += int(d["uptraffic"])
             kv[date_str]["downtraffic"] += int(d["downtraffic"])
             print(f"[DEBUG]: {date_str}: info = {kv[date_str]}")
