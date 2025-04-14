@@ -155,6 +155,7 @@ async def get_gw_traffic(query: GetGWTrafficParam):
         # 2.2 如果key存在，则将uptraffic和downtraffic的值加总
         # 3. 获取kv的keys，排序后生成list，将list中的uptraffic、downtraffic、total和happendate处理返回
         print("[get_gw_traffic]: kv build finished")
+        print(f"[get_gw_traffic]: kv is {kv}")
         lst = []
         for date_str in sorted(kv):
             value = kv.get(date_str)
@@ -166,7 +167,7 @@ async def get_gw_traffic(query: GetGWTrafficParam):
                 "total": f"{normalize_traffic(int(up) + int(down))}",
                 "happendate": date_str
             })
-        return {"data": get_data_with_format(list, format)}
+        return {"data": get_data_with_format(lst, format)}
         
         # for d in response.data:
         #     up = d["uptraffic"]
