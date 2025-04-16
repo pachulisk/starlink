@@ -76,7 +76,8 @@ def get_traffic_total(data):
     """
     total = 0
     for item in data:
-        total += item.get("total", 0)
+        sub = int(item.get("total", 0))
+        total += sub
     return total
     
 def get_bandwidth_strategy_impl(gwid:str):
