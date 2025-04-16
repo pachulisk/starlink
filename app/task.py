@@ -114,7 +114,7 @@ async def upsert_supabase(id, data):
         #   r = r.eq(keys[i], table_data[keys[i]])
         # res = r.execute()
         # return res
-        return supabase.table(table_name).upsert(table_data)
+        return supabase.table(table_name).upsert(table_data).execute()
     else: # IGNORE
         return {"data": [], "count": 0 }
 
