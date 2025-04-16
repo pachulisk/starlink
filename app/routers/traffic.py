@@ -70,6 +70,15 @@ def get_data_with_format(data, format):
     else:
         return data
     
+def get_traffic_total(data):
+    """
+    data是一个list，对list中所有item中的total项目加和，获取traffic total
+    """
+    total = 0
+    for item in data:
+        total += item.get("total", 0)
+    return total
+    
 def get_bandwidth_strategy_impl(gwid:str):
     with gw_login(gwid) as sdk_obj:
         # 读取配置文件wfilter-isp
@@ -98,7 +107,7 @@ def get_bandwidth_strategy_impl(gwid:str):
 
 def aggregate_hourreport(response, format):
     if len(response.data) <= 0:
-        return {"data": get_data_with_format([], format)}
+        return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
     else:
         # 将同一天的内容归集起来
         # 1. 建立一个kv,key是日期，value是data
@@ -138,7 +147,7 @@ def aggregate_hourreport(response, format):
                 "total": f"{normalize_traffic(int(up) + int(down))}",
                 "happendate": date_str
             })
-        return {"data": get_data_with_format(lst, format)}
+        return {"data": get_data_with_format(lst, format), "total": get_traffic_total(lst)}
 
 @traffic.post("/get_gw_traffic", tags=["traffic"])
 async def get_gw_traffic(query: GetGWTrafficParam):
@@ -203,7 +212,7 @@ async def get_user_traffic(query: GetGWTrafficParam):
             .execute())
     # 4. 归集结果
     if len(response.data) <= 0:
-        return {"data": get_data_with_format([], format)}
+        return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
     else:
         list = []
         for d in response.data:
@@ -216,7 +225,7 @@ async def get_user_traffic(query: GetGWTrafficParam):
                 "total": f"{normalize_traffic(float(up) + float(down))}",
                 "happendate": to_date(d["happendate"])
             })
-        return {"data": get_data_with_format(list, format)}
+        return {"data": get_data_with_format(list, format), "total": get_traffic_total(list)}
     
 class GetbandwidthStrategyParam(BaseModel):
     gwid: str
