@@ -38,10 +38,48 @@ def get_user_info_by_gwid_username(gwid: str, username: str):
     else:
         return None
     
-# 在supabase中，通过gwid、username来标记用户的状态为已删除
+# 在supabase中，通过gwid、username的用户删除。
 def mark_user_as_deleted(gwid: str, username: str):
-    response = supabase.table('gw_users').update({'delete_mark': "true"}).eq('gwid', gwid).eq('username', username).execute()
-    return response.data is not None and len(response.data) > 0
+    """
+    在gw_users表中删除用户。
+    1. 在gw_users中获取到相关用户信息。
+    2. 在gw_users表中删除用户。
+    3. 在logging中记录删除的用户日志。
+    """
+    TABLE_NAME = "gw_users"
+    # 1. 在gw_users中获取到相关用户信息。
+    response = (supabase
+                 .table(TABLE_NAME)
+                  .select('*')
+                  .eq('gwid', gwid)
+                  .eq('username', username)
+                  .execute())
+    
+    if len(response.data) <= 0:
+        return {"data": None}
+    
+    user_data = response.data[0]
+    # 2. 在gw_users表中删除用户。
+    _ = (supabase
+                .table('gw_users')
+                .delete()
+                .eq('gwid', gwid)
+                .eq('username', username)
+                .execute())
+    # 3. 在logging中记录删除的用户日志。
+    LOGGING_TABLE = "logging"
+    log_data = {
+        "action": "delete_user",
+        "group": "user",
+        "level": "info",
+        "info": json.dumps(user_data)
+    }
+    response = (supabase
+                .table(LOGGING_TABLE)
+                .insert(log_data)
+                .execute()
+    )
+    return user_data
 
 def gen_user_id():
     timestamp = get_milliseconds()
