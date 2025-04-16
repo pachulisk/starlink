@@ -364,3 +364,11 @@ def is_future_date(date_str):
         return given_date > current_date
     except ValueError:
         return False
+    
+def parse_int(str):
+    try:
+        data = float(str)
+        return int(data)
+    except ValueError:
+        return 0
+    
