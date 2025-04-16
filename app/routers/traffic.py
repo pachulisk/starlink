@@ -4,7 +4,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import json
@@ -76,7 +76,7 @@ def get_traffic_total(data):
     """
     total = 0
     for item in data:
-        sub = int(item.get("total", 0))
+        sub = parse_int(item.get("total", 0))
         total += sub
     return total
     
