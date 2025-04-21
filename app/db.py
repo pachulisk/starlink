@@ -477,7 +477,7 @@ async def get_bandwidth(query: GetBandwidthQuery):
     # 1. 获取当前的日期和小时
     # start_time = f"{today} 00:00:00"
     # start_time_stamp = to_timestamp(start_time)
-    # end_time = f"{today} 23:59:59"
+    # end_time = f"{today} 23:59:59"    
     # end_time_stamp = to_timestamp(end_time)
     print(f"start_time = {start_time_str}, end_time = {end_time_str}")
     # 2. 查询
@@ -1201,7 +1201,7 @@ async def get_account_list(query: GetAccountListQuery):
             "userid": item.get("userid"),
             "total_traffic": get_total_traffic(item),
             "group": item["group"],
-            "online": item["online"],
+            "online": item.get("online").title(),
             "datelimit": item["datelimit"],
             "remark": item.get("remark"), # 套餐名称
             "sid": item.get("sid"),
