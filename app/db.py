@@ -1164,6 +1164,13 @@ def get_total_traffic(item):
     down = item.get("downtraffic") or 0.0
     return normalize_traffic(up + down)
 
+def process_online_field(item):
+    online_item = item.get("online")
+    if online_item is None:
+        return None
+    else:
+        return online_item.title()
+
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
     """
@@ -1201,7 +1208,7 @@ async def get_account_list(query: GetAccountListQuery):
             "userid": item.get("userid"),
             "total_traffic": get_total_traffic(item),
             "group": item["group"],
-            "online": item.get("online").title(),
+            "online": process_online_field(item), # make online as True or False
             "datelimit": item["datelimit"],
             "remark": item.get("remark"), # 套餐名称
             "sid": item.get("sid"),
