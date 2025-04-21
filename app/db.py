@@ -461,28 +461,32 @@ async def get_bandwidth(query: GetBandwidthQuery):
     #逻辑: 查hourreport表，筛选出当前小时的hourreport加和，返回上行带宽、下行带宽和总带宽
     # 0. 获取gwid和date
     gwid = query.gwid
-    date = query.date
+    d = query.date
+
+    d = get_date_obj_from_str(d)
+    start_time_str = get_start_of_month(d, True)
+    end_time_str = get_end_of_month(d, True)
     # 0.1 处理date
-    today = None
-    if date is None:
-        # 如果date为空，则选择今天
-        today = date.today().strftime('%Y-%m-%d')
-    else:
-        # 如果date不是空，则使用date作为时间，时间格式为'2024-03-22'
-        today = date
+    # today = None
+    # if date is None:
+    #     # 如果date为空，则选择今天
+    #     today = date.today().strftime('%Y-%m-%d')
+    # else:
+    #     # 如果date不是空，则使用date作为时间，时间格式为'2024-03-22'
+    #     today = date
     # 1. 获取当前的日期和小时
-    start_time = f"{today} 00:00:00"
+    # start_time = f"{today} 00:00:00"
     # start_time_stamp = to_timestamp(start_time)
-    end_time = f"{today} 23:59:59"
+    # end_time = f"{today} 23:59:59"
     # end_time_stamp = to_timestamp(end_time)
-    print(f"start_time = {start_time}, end_time = {end_time}")
+    print(f"start_time = {start_time_str}, end_time = {end_time_str}")
     # 2. 查询
     response = (supabase
     .table('hourreport')
     .select("*")
     .eq("gwid", gwid)
-    .gte("happendate", start_time)
-    .lte("happendate", end_time)
+    .gte("happendate", start_time_str)
+    .lte("happendate", end_time_str)
     .execute())
     # 3. 归集结果
     # 3.1 如果查询结果为0， 则返回空值
