@@ -388,6 +388,23 @@ async def test_sync_acctreport_b(query: SyncTrafficParam):
     # 5. 返回结果
     return { "result": "success" }
 
+@DB.post("/test_sync_hourreport_b", tags=["tests"])
+async def test_sync_acctreport_b(query: SyncTrafficParam):
+    """
+    测试：将acctreport表的内容，从db中同步到supabase的acctreport_b中。
+    gwid=网关id，必选
+    """
+    gwid = query.gwid
+    target_table_name = "hourreport_b"
+    global_id_keys = ["gwid", "hour", "happendate"]
+    q = PostSyncTasks(table_name="hourreport", target_table_name=target_table_name, gwid=gwid, column="happendate", keys=global_id_keys)
+    task_ret = await post_sync_tasks(q)
+    # 对结果记录日志
+    print(f"同步hourreport_b表: task_ret = {task_ret}")
+    # 5. 返回结果
+    return { "result": "success" }
+
+
 @DB.post("/sync_traffics", tags=["traffic"])
 async def sync_traffics(query: SyncTrafficParam):
     """
