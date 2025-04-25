@@ -269,6 +269,7 @@ def update_task_hour(task):
 
 class PostSyncTasks(BaseModel):
     table_name: str
+    target_table_name: str
     gwid: str
     column: str
     keys: List[str]
@@ -332,6 +333,10 @@ async def post_sync_tasks(query: PostSyncTasks):
     column = query.column or "happendate"
     gwid = query.gwid
     table_name = query.table_name
+    # table_name是表中的名称
+    # 引入target_table_name.
+    # target_table_name是supabase上的表名称
+    target_table_name = query.target_table_name or query.table_name
     keys = query.keys or []
     q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column, full_sync=True)
     task_ret = await create_sync_task(q)
@@ -339,9 +344,9 @@ async def post_sync_tasks(query: PostSyncTasks):
     
     bulk_update = True
     if bulk_update:
-        cmds = build_bulk_task_cmds(gwid, table_name, column, tasks, keys)
+        cmds = build_bulk_task_cmds(gwid, target_table_name, column, tasks, keys)
     else:
-        cmds = build_individual_task_cmds(gwid, table_name, column, tasks)
+        cmds = build_individual_task_cmds(gwid, target_table_name, column, tasks, keys)
     # cmds = []
     # for task in tasks: 
     #     # 生成sync命令
@@ -367,6 +372,22 @@ async def post_sync_tasks(query: PostSyncTasks):
 class SyncTrafficParam(BaseModel):
     gwid: str
 
+@DB.post("/test_sync_acctreport_b", tags=["tests"])
+async def test_sync_acctreport_b(query: SyncTrafficParam):
+    """
+    测试：将acctreport表的内容，从db中同步到supabase的acctreport_b中。
+    gwid=网关id，必选
+    """
+    gwid = query.gwid
+    target_table_name = "acctreport_b"
+    global_id_keys = ["gwid", "acct", "happendate"]
+    q = PostSyncTasks(table_name="acctreport", target_table_name=target_table_name, gwid=gwid, column="happendate", keys=global_id_keys)
+    task_ret = await post_sync_tasks(q)
+    # 对结果记录日志
+    print(f"同步acctreport表: task_ret = {task_ret}")
+    # 5. 返回结果
+    return { "result": "success" }
+
 @DB.post("/sync_traffics", tags=["traffic"])
 async def sync_traffics(query: SyncTrafficParam):
     """
@@ -382,12 +403,12 @@ async def sync_traffics(query: SyncTrafficParam):
     if gw is None or len(gw.data) == 0:
         raise HTTPException(status_code=400, detail="gateway not found")
     # 3. 调用post_sync_tasks，同步hourreport表
-    q = PostSyncTasks(table_name="hourreport", gwid=gwid, column="happendate", keys=[])
+    q = PostSyncTasks(table_name="hourreport", target_table_name="hourreport", gwid=gwid, column="happendate", keys=[])
     task_ret = await post_sync_tasks(q)
     # 对结果记录日志
     print(f"同步hourreport表: task_ret = {task_ret}")
     # 4. 调用post_sync_tasks，同步acctreport表
-    q = PostSyncTasks(table_name="acctreport", gwid=gwid, column="happendate")
+    q = PostSyncTasks(table_name="acctreport", target_table_name="acctreport", gwid=gwid, column="happendate", keys=[])
     task_ret = await post_sync_tasks(q)
     # 对结果记录日志
     print(f"同步acctreport表: task_ret = {task_ret}")
