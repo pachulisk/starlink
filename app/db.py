@@ -379,7 +379,7 @@ async def test_sync_acctreport_b(query: SyncTrafficParam):
     gwid=网关id，必选
     """
     gwid = query.gwid
-    target_table_name = "acctreport_b"
+    target_table_name = "acctreport"
     global_id_keys = ["gwid", "acct", "happendate"]
     q = PostSyncTasks(table_name="acctreport", target_table_name=target_table_name, gwid=gwid, column="happendate", keys=global_id_keys)
     task_ret = await post_sync_tasks(q)
