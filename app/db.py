@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from app.utils import get_gateway_by_id
@@ -270,12 +271,15 @@ class PostSyncTasks(BaseModel):
     table_name: str
     gwid: str
     column: str
+    keys: List[str]
 
-def build_individual_task_cmds(gwid, table_name, column, tasks):
+def build_individual_task_cmds(gwid, table_name, column, tasks, keys):
     cmds = []
     for task in tasks: 
         # 生成sync命令
         update_task_hour(task)
+        if len(keys) > 0:
+            update_global_id_for_task(task, keys)
         d = build_sync_command(gwid, task, table_name, ["gwid", column])
         # 修复happendate
         # 发送sync命令
@@ -288,7 +292,7 @@ def update_global_id_for_task(task, meta_keys):
     if task is None:
         return
     if meta_keys is None:
-        meta_keys = ["gwid", "happendate"]
+        return
     actual_keys = []
     for key in meta_keys:
         if key in task:
@@ -308,12 +312,13 @@ async def test_update_global_id_for_task(param: TestUpdateGlobalIdForTaskParam):
     update_global_id_for_task(task_obj, meta_keys)
     return {"task": task_obj}
 
-def build_bulk_task_cmds(gwid, table_name, column, tasks):
+def build_bulk_task_cmds(gwid, table_name, column, tasks, keys):
     cmds = []
     for task in tasks:
         update_task_hour(task)
         # 构建global_id
-        # update_global_id_for_task(task)
+        if len(keys) > 0:
+            update_global_id_for_task(task, keys)
     # 聚合task
     new_task = []
     for task in tasks:
@@ -327,13 +332,14 @@ async def post_sync_tasks(query: PostSyncTasks):
     column = query.column or "happendate"
     gwid = query.gwid
     table_name = query.table_name
+    keys = query.keys or []
     q = CreateSyncTaskQuery(table_name=table_name, gwid=gwid, column=column, full_sync=True)
     task_ret = await create_sync_task(q)
     tasks = task_ret.get("tasks")
     
     bulk_update = True
     if bulk_update:
-        cmds = build_bulk_task_cmds(gwid, table_name, column, tasks)
+        cmds = build_bulk_task_cmds(gwid, table_name, column, tasks, keys)
     else:
         cmds = build_individual_task_cmds(gwid, table_name, column, tasks)
     # cmds = []
@@ -376,7 +382,7 @@ async def sync_traffics(query: SyncTrafficParam):
     if gw is None or len(gw.data) == 0:
         raise HTTPException(status_code=400, detail="gateway not found")
     # 3. 调用post_sync_tasks，同步hourreport表
-    q = PostSyncTasks(table_name="hourreport", gwid=gwid, column="happendate")
+    q = PostSyncTasks(table_name="hourreport", gwid=gwid, column="happendate", keys=[])
     task_ret = await post_sync_tasks(q)
     # 对结果记录日志
     print(f"同步hourreport表: task_ret = {task_ret}")
