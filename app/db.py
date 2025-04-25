@@ -300,8 +300,9 @@ def update_global_id_for_task(task, meta_keys, gwid):
     for key in meta_keys:
         if key in task:
             actual_keys.append(key)
-    actual_keys.append(gwid)
-    global_id = "_".join([str(task[key]) for key in actual_keys])
+    value_list = [str(task[key]) for key in actual_keys]
+    value_list.append(gwid) # 添加gwid到global_id中
+    global_id = "_".join(value_list)
     task["global_id"] = global_id
     print(f"task = {task}, task global_id = {global_id}")
 
