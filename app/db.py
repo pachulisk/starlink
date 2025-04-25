@@ -300,7 +300,7 @@ def update_global_id_for_task(task, meta_keys):
             actual_keys.append(key)
     global_id = "_".join([str(task[key]) for key in actual_keys])
     task["global_id"] = global_id
-    print(f"task global_id = {global_id}")
+    print(f"task = {task}, task global_id = {global_id}")
 
 class TestUpdateGlobalIdForTaskParam(BaseModel):
     task: str
