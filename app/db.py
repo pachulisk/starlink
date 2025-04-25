@@ -283,10 +283,37 @@ def build_individual_task_cmds(gwid, table_name, column, tasks):
         cmds.append(d)
     return cmds
 
+def update_global_id_for_task(task, meta_keys):
+    # 构建global_id
+    if task is None:
+        return
+    if meta_keys is None:
+        meta_keys = ["gwid", "happendate"]
+    actual_keys = []
+    for key in meta_keys:
+        if key in task:
+            actual_keys.append(key)
+    global_id = "_".join([str(task[key]) for key in actual_keys])
+    task["global_id"] = global_id
+    print(f"task global_id = {global_id}")
+
+class TestUpdateGlobalIdForTaskParam(BaseModel):
+    task: str
+    meta_keys: str
+
+@DB.post("/test_update_global_id_for_task", tags=["tests"])
+async def test_update_global_id_for_task(param: TestUpdateGlobalIdForTaskParam):
+    task_obj = json.loads(param.task)
+    meta_keys = json.loads(param.meta_keys)
+    update_global_id_for_task(task_obj, meta_keys)
+    return {"task": task_obj}
+
 def build_bulk_task_cmds(gwid, table_name, column, tasks):
     cmds = []
     for task in tasks:
         update_task_hour(task)
+        # 构建global_id
+        # update_global_id_for_task(task)
     # 聚合task
     new_task = []
     for task in tasks:
