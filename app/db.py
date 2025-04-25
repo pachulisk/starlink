@@ -280,7 +280,7 @@ def build_individual_task_cmds(gwid, table_name, column, tasks, keys):
         # 生成sync命令
         update_task_hour(task)
         if len(keys) > 0:
-            update_global_id_for_task(task, keys)
+            update_global_id_for_task(task, keys, gwid)
         d = build_sync_command(gwid, task, table_name, ["gwid", column])
         # 修复happendate
         # 发送sync命令
@@ -288,16 +288,19 @@ def build_individual_task_cmds(gwid, table_name, column, tasks, keys):
         cmds.append(d)
     return cmds
 
-def update_global_id_for_task(task, meta_keys):
+def update_global_id_for_task(task, meta_keys, gwid):
     # 构建global_id
     if task is None:
         return
     if meta_keys is None:
         return
+    if gwid is None:
+        return
     actual_keys = []
     for key in meta_keys:
         if key in task:
             actual_keys.append(key)
+    actual_keys.append(gwid)
     global_id = "_".join([str(task[key]) for key in actual_keys])
     task["global_id"] = global_id
     print(f"task = {task}, task global_id = {global_id}")
@@ -310,7 +313,7 @@ class TestUpdateGlobalIdForTaskParam(BaseModel):
 async def test_update_global_id_for_task(param: TestUpdateGlobalIdForTaskParam):
     task_obj = json.loads(param.task)
     meta_keys = json.loads(param.meta_keys)
-    update_global_id_for_task(task_obj, meta_keys)
+    update_global_id_for_task(task_obj, meta_keys, "123456")
     return {"task": task_obj}
 
 def build_bulk_task_cmds(gwid, table_name, column, tasks, keys):
@@ -319,7 +322,7 @@ def build_bulk_task_cmds(gwid, table_name, column, tasks, keys):
         update_task_hour(task)
         # 构建global_id
         if len(keys) > 0:
-            update_global_id_for_task(task, keys)
+            update_global_id_for_task(task, keys, gwid)
     # 聚合task
     new_task = []
     for task in tasks:
