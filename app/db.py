@@ -424,12 +424,12 @@ async def sync_traffics(query: SyncTrafficParam):
     if gw is None or len(gw.data) == 0:
         raise HTTPException(status_code=400, detail="gateway not found")
     # 3. 调用post_sync_tasks，同步hourreport表
-    q = PostSyncTasks(table_name="hourreport", target_table_name="hourreport", gwid=gwid, column="happendate", keys=[])
+    q = PostSyncTasks(table_name="hourreport", target_table_name="hourreport", gwid=gwid, column="happendate", keys=["gwid", "hour", "happendate"])
     task_ret = await post_sync_tasks(q)
     # 对结果记录日志
     print(f"同步hourreport表: task_ret = {task_ret}")
     # 4. 调用post_sync_tasks，同步acctreport表
-    q = PostSyncTasks(table_name="acctreport", target_table_name="acctreport", gwid=gwid, column="happendate", keys=[])
+    q = PostSyncTasks(table_name="acctreport", target_table_name="acctreport", gwid=gwid, column="happendate", keys=["gwid", "acct", "happendate"])
     task_ret = await post_sync_tasks(q)
     # 对结果记录日志
     print(f"同步acctreport表: task_ret = {task_ret}")
