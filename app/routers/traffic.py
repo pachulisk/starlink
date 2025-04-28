@@ -270,6 +270,14 @@ async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
+@traffic.post("/batch_sync_strategy", tags=["traffic"])
+async def batch_sync_strategy(query: TestBatchSyncStrategy):
+    gwid = query.gwid
+    strategy_list = get_bandwidth_strategy_impl(gwid)
+    print("strategy_list = ", strategy_list)
+    response = batch_update_gw_strategy(strategy_list)
+    return { "data": response }
+
 @traffic.post("/test_date_and_hour", tags=["test"])
 async def test_date_and_hour():
     TABLE_NAME = "test_date_and_hour"
