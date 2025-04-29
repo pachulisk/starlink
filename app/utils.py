@@ -125,6 +125,9 @@ def upsert_user(user):
     id = user["id"]
     global_id = f"{gwid}_{id}"
     user["global_id"] = global_id
+    online = user.get("online")
+    if online is None:
+        user["online"] = "true"
     response = supabase.table(TABLE_NAME).upsert(user).execute()
     return response
 
