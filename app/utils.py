@@ -245,6 +245,7 @@ def setkv(type, id, key, value):
 @contextmanager
 def gw_login(gwid:str):
     print("==gw_login")
+    # TODO:增加要ping通网关才行
     try:
         gw = supabase.table("gateway").select("*").eq("id", gwid).execute()
         if gw is None or len(gw.data) == 0:
@@ -372,3 +373,7 @@ def parse_int(str):
     except ValueError:
         return 0
     
+def starts_with_number(str):
+    if len(str) <= 0:
+        return False
+    return str[0].isdigit()
