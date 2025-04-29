@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
+from ..utils import starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
@@ -215,6 +215,9 @@ async def read_gateways():
 @router.post("/add_gateway", tags=["gateway"])
 async def create_gateway(gw: Gateway):
     ip = gw.address
+    # 如果是以数字开头的，则加上http://前缀
+    if starts_with_number(ip):
+        ip = f"http://{ip}"
     online = is_online(ip)
     if online is False:
         raise HTTPException(status_code=400, detail="网关不在线")
@@ -224,7 +227,7 @@ async def create_gateway(gw: Gateway):
         "username": gw.username,
         "port": gw.port,
         "password": gw.password,
-        "address": gw.address,
+        "address": ip,
         "serial_no": gw.serial_no,
         "client_name": gw.client_name,
         "enable_time": gw.enable_time,
