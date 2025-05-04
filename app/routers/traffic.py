@@ -107,6 +107,7 @@ def get_bandwidth_strategy_impl(gwid:str):
 
 
 def aggregate_hourreport(response, format):
+    unit = get_unit_from_format(format)
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
     else:
@@ -143,9 +144,9 @@ def aggregate_hourreport(response, format):
             up = value.get("uptraffic")
             down = value.get("downtraffic")
             lst.append({
-                "up": normalize_traffic(up),
-                "down": normalize_traffic(down),
-                "total": f"{normalize_traffic(int(up) + int(down))}",
+                "up": normalize_traffic(up, unit),
+                "down": normalize_traffic(down, unit),
+                "total": f"{normalize_traffic(int(up) + int(down), unit)}",
                 "happendate": date_str
             })
         return {"data": get_data_with_format(lst, format), "total": get_traffic_total(lst)}
