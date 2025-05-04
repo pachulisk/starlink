@@ -194,6 +194,11 @@ class GetUserTrafficParam(BaseModel):
     format: str | None = None
     user: str | None = None
 
+def get_unit_from_format(format):
+    if format == "csv":
+        return "GB"
+    return None
+
 @traffic.post("/get_user_traffic", tags=["traffic"])
 async def get_user_traffic(query: GetUserTrafficParam):
     # 1. 获取gwid, user和日期date
@@ -209,6 +214,7 @@ async def get_user_traffic(query: GetUserTrafficParam):
     format = query.format
     TABLE_NAME = "acctreport_view"
     response = None
+    unit = get_unit_from_format(format)
     if is_empty(gwid):
         response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
     else:
@@ -239,9 +245,9 @@ async def get_user_traffic(query: GetUserTrafficParam):
             down = d["downtraffic"]
             list.append({
                 "acct": d["acct"],
-                "up": normalize_traffic(up),
-                "down": normalize_traffic(down),
-                "total": f"{normalize_traffic(float(up) + float(down))}",
+                "up": normalize_traffic(up, unit),
+                "down": normalize_traffic(down, unit),
+                "total": f"{normalize_traffic(float(up) + float(down), unit)}",
                 "happendate": to_date(d["happendate"])
             })
         return {"data": get_data_with_format(list, format), "total": get_traffic_total(list)}
