@@ -214,6 +214,9 @@ async def get_user_traffic(query: GetUserTrafficParam):
     format = query.format
     TABLE_NAME = "acctreport_view"
     response = None
+    # fix: 根据format的格式来选择使用的单位
+    # 当格式为csv格式的时候，使用GB作为单位
+    # 当格式是其他的时候，使用None(bytes)作为单位
     unit = get_unit_from_format(format)
     if is_empty(gwid):
         response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
