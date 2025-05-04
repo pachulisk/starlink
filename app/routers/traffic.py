@@ -187,12 +187,20 @@ async def get_gw_traffic(query: GetGWTrafficParam):
     print(f"[DEBUG][get_gw_traffic]:response.data = f{response.data}")
     return aggregate_hourreport(response, format)
 
+class GetUserTrafficParam(BaseModel):
+    gwid: str
+    start_date: str | None = None
+    end_date: str | None = None
+    format: str | None = None
+    user: str | None = None
+
 @traffic.post("/get_user_traffic", tags=["traffic"])
-async def get_user_traffic(query: GetGWTrafficParam):
+async def get_user_traffic(query: GetUserTrafficParam):
     # 1. 获取gwid, user和日期date
     # 2. 如果date为空，则默认查询时间设置为本年本月；否则按照date查询
     # 3. 从supabase查询acctreport表，筛选日期在date的月份范围内
     gwid = query.gwid
+    user = query.user
     start_date = query.start_date
     end_date = query.end_date
     times = calculate_start_and_end_str(start_date, end_date)
@@ -204,13 +212,23 @@ async def get_user_traffic(query: GetGWTrafficParam):
     if is_empty(gwid):
         response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
     else:
-        response = (supabase
-            .table(TABLE_NAME)
-            .select("*")
-            .eq("gwid", gwid)
-            .gte("happendate", start_time_str)
-            .lte("happendate", end_time_str)
-            .execute())
+        if is_empty(user):
+            response = (supabase
+                .table(TABLE_NAME)
+                .select("*")
+                .eq("gwid", gwid)
+                .gte("happendate", start_time_str)
+                .lte("happendate", end_time_str)
+                .execute())
+        else:
+            response = (supabase
+                .table(TABLE_NAME)
+                .select("*")
+                .eq("gwid", gwid)
+                .eq("acct", user)
+                .gte("happendate", start_time_str)
+                .lte("happendate", end_time_str)
+                .execute())
     # 4. 归集结果
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
