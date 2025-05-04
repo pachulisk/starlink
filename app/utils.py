@@ -34,6 +34,18 @@ def get_traffic_ratio():
     """返回流量乘数"""
     return cfg.TRAFFIC_RATIO
 
+def get_gb_from_bytes(bytes):
+    """
+    将字节转换为GB
+    """
+    return bytes / (1000 ** 3)
+
+def get_digits(num, x):
+    """
+    保留x位小数
+    """
+    return round(num, x) if num is not None else None
+
 def normalize_traffic(traffic):
     """
     归一化流量, 根据流量乘数和流量计算最终归一化的流量数值
@@ -49,7 +61,10 @@ def normalize_traffic(traffic):
     except ValueError:
         pass
     ratio = 1.3
-    return n * ratio
+    n = get_gb_from_bytes(n * ratio)
+    n = get_digits(n, 2)
+    return n
+
 
 def is_valid_ipv4(ip):
     """
