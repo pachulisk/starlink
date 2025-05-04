@@ -198,7 +198,7 @@ async def add_user(param: AddUserParam):
         "logins": value.get("logins"),
         "macbound": value.get("macbound"),
         "changepwd": value.get("changepwd"),
-        "online": False,
+        "online": True, # 新建用户的启用状态要设置为启用
         "delete_mark": False,
         "virtual_group": group_id,
     }
