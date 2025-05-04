@@ -417,3 +417,8 @@ def starts_with_number(str):
     if len(str) <= 0:
         return False
     return str[0].isdigit()
+
+def get_unit_from_format(format):
+    if format == "csv":
+        return "GB"
+    return None

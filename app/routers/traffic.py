@@ -4,7 +4,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import json
@@ -193,11 +193,6 @@ class GetUserTrafficParam(BaseModel):
     end_date: str | None = None
     format: str | None = None
     user: str | None = None
-
-def get_unit_from_format(format):
-    if format == "csv":
-        return "GB"
-    return None
 
 @traffic.post("/get_user_traffic", tags=["traffic"])
 async def get_user_traffic(query: GetUserTrafficParam):
