@@ -40,13 +40,25 @@ def get_gb_from_bytes(bytes):
     """
     return bytes / (1000 ** 3)
 
+def get_mb_from_bytes(bytes):
+    """
+    将字节转换为MB
+    """
+    return bytes / (1000 ** 2)
+
+def get_kb_from_bytes(bytes):
+    """
+    将字节转换为KB
+    """
+    return bytes / 1000
+
 def get_digits(num, x):
     """
     保留x位小数
     """
     return round(num, x) if num is not None else None
 
-def normalize_traffic(traffic):
+def normalize_traffic(traffic, unit=None):
     """
     归一化流量, 根据流量乘数和流量计算最终归一化的流量数值
     """
@@ -61,7 +73,17 @@ def normalize_traffic(traffic):
     except ValueError:
         pass
     ratio = 1.3
-    n = get_gb_from_bytes(n * ratio)
+    if unit is None:
+        # do nothing
+        pass
+    elif unit == "gb" or unit == "GB":
+        n = get_gb_from_bytes(n * ratio)
+    elif unit == "mb" or unit == "MB":
+        n = get_mb_from_bytes(n * ratio)
+    elif unit == "kb" or unit == "KB":
+        n = get_kb_from_bytes(n * ratio) 
+    else:
+        pass
     n = get_digits(n, 2)
     return n
 
