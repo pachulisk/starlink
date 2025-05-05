@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
+from ..utils import is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
@@ -22,26 +22,6 @@ def parse_valid_ipv4(addr):
     else:
         return ipv4
 
-def is_online(ip):
-    # 检查ip的格式
-    # 1. 如果以http://或者https://开头，则去掉http://或者https://的部分，检查剩下的部分是否是合法的ipv4地址
-    ipv4 = ""
-    if ip is None:
-        return False
-    if ip.startswith("http://"):
-        ipv4 = ip[7:]
-    elif ip.startswith("https://"):
-        ipv4 = ip[8:]
-    else:
-        ipv4 = ip
-    # 2. 如果ip不是合法的ipv4地址，则返回"false"
-    if not is_valid_ipv4(ipv4):
-        return False
-    # 3. 如果能ping通，则返回True，否则返回False
-    if ping(ipv4):
-        return True
-    else:
-        return False
 def check_online_multi(addrs):
     # addrs是候选的地址列表。
     # 需要返回一个kv, key是addrs中的每一个地址，value是True或者False,

@@ -422,3 +422,24 @@ def get_unit_from_format(format):
     if format == "csv":
         return "GB"
     return None
+
+def is_online(ip):
+    # 检查ip的格式
+    # 1. 如果以http://或者https://开头，则去掉http://或者https://的部分，检查剩下的部分是否是合法的ipv4地址
+    ipv4 = ""
+    if ip is None:
+        return False
+    if ip.startswith("http://"):
+        ipv4 = ip[7:]
+    elif ip.startswith("https://"):
+        ipv4 = ip[8:]
+    else:
+        ipv4 = ip
+    # 2. 如果ip不是合法的ipv4地址，则返回"false"
+    if not is_valid_ipv4(ipv4):
+        return False
+    # 3. 如果能ping通，则返回True，否则返回False
+    if ping(ipv4):
+        return True
+    else:
+        return False
