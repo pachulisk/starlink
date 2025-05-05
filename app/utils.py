@@ -285,15 +285,34 @@ def setkv(type, id, key, value):
 @contextmanager
 def gw_login(gwid:str):
     print("==gw_login")
+    try:
+        # 从supabase获取网关信息
+        gw = supabase.table("gateway").select("*").eq("id", gwid).execute()
+    except Exception as e:
+        # 如果没有获取到，抛出网关不在列表中的错误信息
+        raise HTTPException(status_code=400, detail="网关不在列表中")
+    # 如果成功获取supabase的列表但是列表内容为空， 则返回未找到网关
+    if gw is None or len(gw.data) == 0:
+        raise HTTPException(status_code=400, detail="未找到网关")
+    # 获取用户名、密码和地址
+    username = gw.data[0].get('username')
+    password = gw.data[0].get('password')
+    address = gw.data[0].get('address')
+    # 初始化online变量值为False
+    online = False
+    try:
+        # 调用is_online来判断对应的地址是否在线
+        online = is_online(address)
+    except Exception as e:
+        # 如果过程中发生问题，说明网关不在线
+        raise HTTPException(status_code=400, detail="网关不在线1")
+    # 如果online值为False，停止前进，抛出网关不在线的信息
+    if online is False:
+        raise HTTPException(status_code=400, detail="网关不在线")
+    
     # TODO:增加要ping通网关才行
     try:
-        gw = supabase.table("gateway").select("*").eq("id", gwid).execute()
-        if gw is None or len(gw.data) == 0:
-            raise HTTPException(status_code=400, detail="gateway not found")
         # get gateway username, password and address
-        username = gw.data[0].get('username')
-        password = gw.data[0].get('password')
-        address = gw.data[0].get('address')
         sdk = SDK()
         if sdk.login(address, username, password):
             yield sdk
