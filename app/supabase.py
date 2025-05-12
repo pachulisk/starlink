@@ -70,7 +70,7 @@ def formalize_supabase_datetime(dt):
 
 def make_list(row):
     my_lst = row.split("|")
-    return list(filter(lambda x: len(x)>0, my_lst))
+    return list(filter(lambda x: len(x)>=0, my_lst))
 
 
 def build_dict_from_line(meta, line):
