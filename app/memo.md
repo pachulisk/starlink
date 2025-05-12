@@ -69,3 +69,34 @@ FROM t3
 JOIN gateway g
 ON g.id::varchar = t3.gwid;
 ```
+
+# 创建函数 extract_username
+```
+CREATE OR REPLACE FUNCTION extract_username(input_string TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    start_pos INTEGER;
+    end_pos INTEGER;
+BEGIN
+    -- 检查字符串是否以CN%3d开头
+    IF input_string LIKE 'CN%3d%' THEN
+        -- 计算名字的起始位置(跳过CN%3d)
+        start_pos := 6;
+        
+        -- 查找第一个%2c的位置
+        end_pos := position('%2c' IN input_string);
+        
+        -- 如果找到了%2c，提取中间的名字部分
+        IF end_pos > 0 THEN
+            RETURN substring(input_string FROM start_pos FOR end_pos - start_pos);
+        ELSE
+            -- 如果没有找到%2c，返回从CN%3d之后的所有内容
+            RETURN substring(input_string FROM start_pos);
+        END IF;
+    ELSE
+        -- 如果字符串不以CN%3d开头，返回NULL
+        RETURN NULL;
+    END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+```
