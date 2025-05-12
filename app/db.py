@@ -328,7 +328,9 @@ def build_bulk_task_cmds(gwid, table_name, column, tasks, keys):
     new_task = []
     for task in tasks:
         new_task.append(task)
-    d = build_sync_command(gwid, new_task, table_name, ["gwid", column])
+    if len(keys) <= 0:
+        keys = ["gwid", column]
+    d = build_sync_command(gwid, new_task, table_name, keys)
     cmds.append(d)
     return cmds
 
