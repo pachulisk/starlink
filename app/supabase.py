@@ -85,7 +85,11 @@ def build_dict_from_line(meta, line):
     data_len = len(data_list)
     length = min(meta_len, data_len)
     for i in range(length):
-        dict[meta_list[i]] = data_list[i]
+        key = meta_list[i]
+        value = data_list[i]
+        if len(key) > 0 or len(value) > 0:
+            dict[key] = value
+        # dict[meta_list[i]] = data_list[i]
     return dict
 
 def to_date(data):
