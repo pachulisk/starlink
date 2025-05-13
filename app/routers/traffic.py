@@ -4,7 +4,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import str2float, get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import json
@@ -357,3 +357,54 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
         ]
         luigi.build(tasks, local_scheduler=True)
         return { "data": result }
+
+class GetTrafficForUserQuery(BaseModel):
+    username: str
+    gwid: str
+    date: str
+
+@traffic.post("/get_traffic_for_user", tags=["traffic"])
+async def get_traffic_for_user(query: GetTrafficForUserQuery):
+    """
+    用来获取某天acctreport中的某个用户的流量
+    """
+    # 获取日期并验证日期不是空
+    date = query.date
+    if not date:
+        raise HTTPException(status_code=400, detail="Date cannot be empty")
+    # 获取网关并验证网关不是空
+    gwid = query.gwid
+    if not gwid:
+        raise HTTPException(status_code=400, detail="Gwid cannot be empty")
+    # 获取用户名并验证用户名不是空
+    username = query.username
+    if not username:
+        raise HTTPException(status_code=400, detail="Username cannot be empty")
+    # 将用户名补全为CN%3xxxx%2cDC%3dwflocal
+    username = f"CN%3d{username}%2cDC%3dwflocal"
+    # 进行supabase表的acctreport进行查询
+    times = calculate_start_and_end_str(date, date)
+    date_str = times[0]
+    # 返回查询的uptraffic和downtraffic
+    TABLE_NAME="acctreport"
+    response = (supabase
+            .table(TABLE_NAME)
+            .select("*")
+            .eq("gwid", gwid)
+            .gte("happendate", date_str)
+            .lte("happendate", date_str)
+            .execute())
+    up = 0.0
+    down = 0.0
+    total = 0.0
+    for item in response.data:
+        uptraffic = str2float(item.get("uptraffic", "0"))
+        downtraffic = str2float(item.get("downtraffic", "0"))
+        up += uptraffic
+        down += downtraffic
+        total += uptraffic + downtraffic
+    return {
+        "uptraffic": up,
+        "downtraffic": down,
+        "totaltraffic": total
+    }

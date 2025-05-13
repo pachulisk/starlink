@@ -58,6 +58,15 @@ def get_digits(num, x):
     """
     return round(num, x) if num is not None else None
 
+def str2float(s):
+    """
+    将字符串转换为浮点数
+    """
+    try:
+        return float(s)
+    except ValueError:
+        return 0.0
+
 def normalize_traffic(traffic, unit=None):
     """
     归一化流量, 根据流量乘数和流量计算最终归一化的流量数值
