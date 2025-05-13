@@ -400,6 +400,7 @@ async def get_traffic_for_user(query: GetTrafficForUserQuery):
     up = 0.0
     down = 0.0
     total = 0.0
+    print(f"[get_traffic_for_user], username=f{username}, date=f{date}, gwid=f{gwid}, response=f{response.data}")
     for item in response.data:
         uptraffic = str2float(item.get("uptraffic", "0"))
         downtraffic = str2float(item.get("downtraffic", "0"))
