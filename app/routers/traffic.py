@@ -413,3 +413,42 @@ async def get_traffic_for_user(query: GetTrafficForUserQuery):
         "downtraffic": get_mb_by_1024(down),
         "totaltraffic": get_mb_by_1024(total)
     }
+
+
+class BatchGetTrafficForUserQuery(BaseModel):
+    gwid: str
+    info: str
+
+@traffic.post("/batch_get_traffic_for_user", tags=["traffic"])
+async def batch_get_traffic_for_user(query: BatchGetTrafficForUserQuery):
+    """
+    用来批量获取某天acctreport中的多个用户的流量
+    入参1: 网关名称 gwid
+    入参2: info，由csv分割的多行，每行第一列是时间，第二列是账号。
+    返回值: outputs， 由csv分割的多行，每行第一列是时间，第二列是账号，第三列是uptraffic, 第四列是downtraffic, 第五列是totaltraffic。
+    """
+    # 获取网关并验证网关不是空
+    gwid = query.gwid
+    if not gwid:
+        raise HTTPException(status_code=400, detail="Gwid cannot be empty")
+    # 获取info并验证info不是空
+    info = query.info
+    if not info:
+        raise HTTPException(status_code=400, detail="Info cannot be empty")
+    print(f"[batch_get_traffic_for_user], gwid=f{gwid}, info=f{info}")
+    # 解析info
+    lines = info.split('\n')
+    outputs = []
+    # 解析csv，获取多行
+    for line in lines:
+        parts = line.split(',')
+        if len(parts) != 2:
+            raise HTTPException(status_code=400, detail="Info format is incorrect, should be 'date,username'")
+        # 对于每一行，获取第一列为时间，第二列为账号，调用get_traffic_for_user
+        date = parts[0]
+        username = parts[1]
+        result = await get_traffic_for_user(GetTrafficForUserQuery(date=date, gwid=gwid, username=username))
+        result['date'] = date
+        result['username'] = username
+        outputs.append(result)
+    return {"data": get_data_with_format(outputs, 'csv')}
