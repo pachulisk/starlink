@@ -1,16 +1,18 @@
+# 删除user_traffic_view
+DROP VIEW user_traffic_view;
 # 创建user_traffic_view
 ```
 -- 第一步：创建临时表 t1
 CREATE VIEW user_traffic_view AS 
 WITH t1 AS (
     SELECT 
-        (regexp_matches(acct, 'CN%3d([^%]+)'))[1] AS tmp_username,
+        extract_username(acct) AS tmp_username,
         SUM(uptraffic::numeric) AS uptraffic,
         SUM(downtraffic::numeric) AS downtraffic
     FROM 
         acctreport
     GROUP BY 
-        (regexp_matches(acct, 'CN%3d([^%]+)'))[1]
+        extract_username(acct)
 ),
 -- 第二步：创建最终的新表
  t2 AS (
