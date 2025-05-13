@@ -394,6 +394,7 @@ async def get_traffic_for_user(query: GetTrafficForUserQuery):
             .table(TABLE_NAME)
             .select("*")
             .eq("gwid", gwid)
+            .eq("acct", username)
             .gte("happendate", date_str)
             .lte("happendate", date_str)
             .execute())
