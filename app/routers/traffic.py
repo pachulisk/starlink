@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile
 import luigi
+import csv
+import codecs
 from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
@@ -417,7 +419,7 @@ async def get_traffic_for_user(query: GetTrafficForUserQuery):
 
 class BatchGetTrafficForUserQuery(BaseModel):
     gwid: str
-    info: str
+    info: UploadFile
 
 @traffic.post("/batch_get_traffic_for_user", tags=["traffic"])
 async def batch_get_traffic_for_user(query: BatchGetTrafficForUserQuery):
@@ -435,20 +437,24 @@ async def batch_get_traffic_for_user(query: BatchGetTrafficForUserQuery):
     info = query.info
     if not info:
         raise HTTPException(status_code=400, detail="Info cannot be empty")
-    print(f"[batch_get_traffic_for_user], gwid=f{gwid}, info=f{info}")
+    # info是一个UploadFile文件，从文件中读取csv
+    csvReader = csv.DictReader(codecs.iterdecode(info.file, 'utf-8'))
+    
+    print(f"[batch_get_traffic_for_user], gwid=f{gwid}")
     # 解析info
-    lines = info.split('\n')
+    # lines = info.split('\n')
     outputs = []
     # 解析csv，获取多行
-    for line in lines:
-        parts = line.split(',')
+    for row in csvReader:
+        parts = row
         if len(parts) != 2:
             raise HTTPException(status_code=400, detail="Info format is incorrect, should be 'date,username'")
         # 对于每一行，获取第一列为时间，第二列为账号，调用get_traffic_for_user
-        date = parts[0]
-        username = parts[1]
+        date = parts["date"]
+        username = parts["username"]
         result = await get_traffic_for_user(GetTrafficForUserQuery(date=date, gwid=gwid, username=username))
         result['date'] = date
         result['username'] = username
         outputs.append(result)
+    info.file.close()
     return {"data": get_data_with_format(outputs, 'csv')}
