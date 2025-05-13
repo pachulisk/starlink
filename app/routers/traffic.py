@@ -4,7 +4,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import str2float, get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import get_digits, str2float, get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import json
@@ -363,6 +363,9 @@ class GetTrafficForUserQuery(BaseModel):
     gwid: str
     date: str
 
+def get_mb_by_1024(traffic):
+    return get_digits(traffic/1024/1024,2)
+
 @traffic.post("/get_traffic_for_user", tags=["traffic"])
 async def get_traffic_for_user(query: GetTrafficForUserQuery):
     """
@@ -404,7 +407,7 @@ async def get_traffic_for_user(query: GetTrafficForUserQuery):
         down += downtraffic
         total += uptraffic + downtraffic
     return {
-        "uptraffic": up,
-        "downtraffic": down,
-        "totaltraffic": total
+        "uptraffic": get_mb_by_1024(up),
+        "downtraffic": get_mb_by_1024(down),
+        "totaltraffic": get_mb_by_1024(total)
     }
