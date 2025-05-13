@@ -333,8 +333,11 @@ def gw_login(gwid:str):
         sdk.logout()
 
 def get_date_obj_from_str(s):
+    # 如果s是以/作为分隔符，将/替换为-
+    if '/' in s:
+        s = s.replace('/', '-')
     # 处理yyyy-mm-dd的情况
-    regex1 = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+    regex1 = re.compile(r'\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])')
     regex = re.compile(r'^\d{4}-\d{2}$')
     if regex1.match(s):
         c = s.split('-')
