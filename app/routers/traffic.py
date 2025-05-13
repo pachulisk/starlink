@@ -417,12 +417,9 @@ async def get_traffic_for_user(query: GetTrafficForUserQuery):
     }
 
 
-class BatchGetTrafficForUserQuery(BaseModel):
-    gwid: str
-    info: UploadFile
 
 @traffic.post("/batch_get_traffic_for_user", tags=["traffic"])
-async def batch_get_traffic_for_user(query: BatchGetTrafficForUserQuery):
+async def batch_get_traffic_for_user(gwid: str, info: UploadFile):
     """
     用来批量获取某天acctreport中的多个用户的流量
     入参1: 网关名称 gwid
@@ -430,11 +427,9 @@ async def batch_get_traffic_for_user(query: BatchGetTrafficForUserQuery):
     返回值: outputs， 由csv分割的多行，每行第一列是时间，第二列是账号，第三列是uptraffic, 第四列是downtraffic, 第五列是totaltraffic。
     """
     # 获取网关并验证网关不是空
-    gwid = query.gwid
     if not gwid:
         raise HTTPException(status_code=400, detail="Gwid cannot be empty")
     # 获取info并验证info不是空
-    info = query.info
     if not info:
         raise HTTPException(status_code=400, detail="Info cannot be empty")
     # info是一个UploadFile文件，从文件中读取csv
