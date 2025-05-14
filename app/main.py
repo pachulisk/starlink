@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request ,Depends,status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import asyncio
 from starlette.status import HTTP_504_GATEWAY_TIMEOUT
