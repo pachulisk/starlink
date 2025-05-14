@@ -102,3 +102,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 ```
+
+# 创建gw_user_traffic_view
+```
+CREATE OR REPLACE VIEW gw_user_traffic_view AS
+SELECT
+    happendate,
+    gwid,
+    SUM(uptraffic) AS up,
+    SUM(downtraffic) AS down
+FROM
+    acctreport_view
+GROUP BY
+    happendate, gwid
+ORDER BY
+    happendate, gwid;
+    
+```
