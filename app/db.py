@@ -18,7 +18,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import is_empty, is_not_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+from .utils import get_ratio_by_gwid, is_empty, is_not_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1144,6 +1144,8 @@ async def get_user_bandwidth_detail(query: GetUserBandwidthDetailQuery):
     d = get_date_obj_from_str(d)
     start_time_str = get_start_of_month(d, True)
     end_time_str = get_end_of_month(d, True)
+    unit = "GB"
+    ratio = get_ratio_by_gwid(gwid)
     response = (supabase
         .table('acctreport')
         .select("*")
@@ -1161,9 +1163,9 @@ async def get_user_bandwidth_detail(query: GetUserBandwidthDetailQuery):
             down = d["downtraffic"]
             list.append({
                 "acct": d["acct"],
-                "up": normalize_traffic(up),
-                "down": normalize_traffic(down),
-                "total": f"{normalize_traffic(float(up) + float(down))}",
+                "up": normalize_traffic(up, unit, ratio),
+                "down": normalize_traffic(down, unit, ratio),
+                "total": f"{normalize_traffic(float(up) + float(down), unit, ratio)}",
                 "happendate": to_date(d["happendate"])
             })
         return {"data": list}
@@ -1204,6 +1206,8 @@ async def get_device_list(query: GetAccountListQuery):
         .execute()
     )
     data = r.data
+    unit = "GB"
+    ratio = get_ratio_by_gwid(gwid)
     print(f"[DEBUG][get_device_list]: r.data = {data}")
     lst = []
     for item in data:
@@ -1211,8 +1215,8 @@ async def get_device_list(query: GetAccountListQuery):
         device["ip"] = item["ip"]
         device["macaddr"] = item["macaddr"]
         device["group"] = item["group"]
-        device["up"] = normalize_traffic(item["up"])
-        device["down"] = normalize_traffic(item["down"])
+        device["up"] = normalize_traffic(item["up"], unit, ratio)
+        device["down"] = normalize_traffic(item["down"], unit, ratio)
         device["gwid"] = gwid
         lst.append(device)
 
@@ -1229,17 +1233,17 @@ async def get_device_list(query: GetAccountListQuery):
             device["ip"] = item["ip"]
             device["macaddr"] = item["mac"]
             device["group"] = item["group"]
-            device["up"] = normalize_traffic(item["up"])
-            device["down"] = normalize_traffic(item["down"])
+            device["up"] = normalize_traffic(item["up"], unit, ratio)
+            device["down"] = normalize_traffic(item["down"], unit, ratio)
             device["gwid"] = gwid
             list.append(device)
         luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
     return { "data": lst }
 
-def get_total_traffic(item):
+def get_total_traffic(item, unit, ratio):
     up = item.get("uptraffic") or 0.0
     down = item.get("downtraffic") or 0.0
-    return normalize_traffic(up + down)
+    return normalize_traffic(up + down, unit, ratio)
 
 def process_online_field(item):
     online_item = item.get("online")
@@ -1278,12 +1282,13 @@ async def get_account_list(query: GetAccountListQuery):
             continue
         if is_not_empty(gwid) and item.get("gwid") != gwid:
             continue
+        ratio = get_ratio_by_gwid(gw_id)
         data.append({
             "gwid": gw_id,
             "gateway_name": item["gateway_name"],
             "username": item["username"],
             "userid": item.get("userid"),
-            "total_traffic": get_total_traffic(item),
+            "total_traffic": get_total_traffic(item, "GB", ratio),
             "group": item["group"],
             "online": process_online_field(item), # make online as True or False
             "datelimit": item["datelimit"],
@@ -1334,7 +1339,7 @@ async def get_stats():
             "client_count": client_count,
             "fleet_count": fleet_count,
             "user_count": users_count,
-            "total_traffic": normalize_traffic(up+down)
+            "total_traffic": normalize_traffic(up+down, "GB", 1.3) # TODO: 这里粗略计算，后面需要按照每个网关计算
         } }
 
 @DB.post("/test_upsert_user", tags=["test"])
