@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request ,Depends,status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+import csv
 from dotenv import load_dotenv
 import asyncio
 from starlette.status import HTTP_504_GATEWAY_TIMEOUT
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
     app_name: str = "默认应用名称"
     debug: bool = False
     ratio_file: str # 网关流量比例所在的文件，以csv为结尾的文件名
+    ratio_table: any = None
     class Config:
         env_file = ".env"  # 从 .env 文件加载环境变量
         env_prefix = "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
@@ -52,11 +54,32 @@ class Settings(BaseSettings):
 app = FastAPI()
 settings = None
 
+async def get_csv_as_dict(file_path: str):
+    result = {}
+    try:
+        with open(file_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                if len(row) >= 2:
+                    try:
+                        result[row[0]] = float(row[1])
+                    except ValueError:
+                        # 处理ratio无法转换为float的情况
+                        continue
+    except FileNotFoundError:
+        return {"error": "文件未找到"}
+    except Exception as e:
+        return {"error": str(e)}
+    return result
+
 @app.on_event("startup")
 async def startup_event():
     global settings
     # 读取环境变量
     settings = Settings()
+    ratio_file = settings.ratio_file
+    if ratio_file is not None:
+        settings.ratio_table = await get_csv_as_dict(ratio_file)
     
 @app.middleware("http")
 async def timeout_middleware(request: Request, call_next):
