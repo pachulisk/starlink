@@ -67,7 +67,7 @@ def str2float(s):
     except ValueError:
         return 0.0
 
-def normalize_traffic(traffic, unit=None):
+def normalize_traffic(traffic, unit=None, ratio=None):
     """
     归一化流量, 根据流量乘数和流量计算最终归一化的流量数值
     """
@@ -81,7 +81,8 @@ def normalize_traffic(traffic, unit=None):
         n = float(traffic_num)
     except ValueError:
         pass
-    ratio = 1.3
+    if ratio is None:
+        ratio = 1.3
     if unit is None:
         # do nothing
         pass
@@ -472,3 +473,19 @@ def is_online(ip):
         return True
     else:
         return False
+    
+def get_ratio_by_gwid(gwid: str):
+    default_val = 1.3
+    if gwid is None:    
+        return default_val
+    else:
+        # 获取settings变量
+        if settings is None:
+            return default_val
+        elif settings.ratio_table is None:
+            return default_val
+        else:
+            # 从ratio_table中获取ratio
+            ratio = settings.ratio_table.get(gwid, default_val)
+            return ratio
+    return default_val
