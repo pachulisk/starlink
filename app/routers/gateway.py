@@ -173,7 +173,7 @@ async def read_gateways():
         total_traffic = up + down
         device_count = item.get("device_count") or 0
         user_count = item.get("user_count") or 0
-        ratio = get_device_by_gwid(gwid)
+        ratio = get_ratio_by_gwid(gwid)
         list.append({
             "id": item.get('id'),
             "name": item.get('name'),
