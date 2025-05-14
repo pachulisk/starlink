@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
+from ..utils import get_device_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
@@ -173,6 +173,7 @@ async def read_gateways():
         total_traffic = up + down
         device_count = item.get("device_count") or 0
         user_count = item.get("user_count") or 0
+        ratio = get_device_by_gwid(gwid)
         list.append({
             "id": item.get('id'),
             "name": item.get('name'),
@@ -185,7 +186,7 @@ async def read_gateways():
             "enable_time": item.get('enable_time'),
             "online": check_ip_result.get(item.get("address")),
             "fleet": item.get('fleet'), 
-            "total_traffic": normalize_traffic(total_traffic), # 网关流量
+            "total_traffic": normalize_traffic(total_traffic, "GB", ratio), # 网关流量
             "device_count": device_count, # 网关设备数
             "user_count": user_count, # 网关用户数
         })        
