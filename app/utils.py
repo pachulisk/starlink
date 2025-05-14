@@ -450,9 +450,7 @@ def starts_with_number(str):
     return str[0].isdigit()
 
 def get_unit_from_format(format):
-    if format == "csv":
-        return "GB"
-    return None
+    return "GB"
 
 def is_online(ip):
     # 检查ip的格式
