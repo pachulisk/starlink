@@ -107,6 +107,35 @@ def get_bandwidth_strategy_impl(gwid:str):
                     result.append(val)
             return result
 
+def aggregate_gw_user_traffic_view(response, format):
+    """
+    根据gw_user_traffic_view的结果，归集汇总流量数据。
+    gw_user_traffic_view数据包括的列: happendate, gwid, up, down
+    返回的数据包括的列: up, down, total, happendate
+    """
+    # get_unit_from_format归集结果单位: GB
+    unit = get_unit_from_format(format)
+    if len(response.data) <= 0:
+        return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
+    else:
+        # 最终返回的数据列表
+        lst = []
+        total_bytes = 0
+        for d in response.data:
+            happendate = d.get("happendate")
+            date = to_date(happendate)
+            date_str = date.strftime("%Y-%m-%d")
+            upbytes = d.get("up")
+            downbytes = d.get("down")
+            local_total = int(upbytes) + int(downbytes)
+            total_bytes = total_bytes + int(upbytes) + int(downbytes)
+            lst.append({
+                "up": normalize_traffic(upbytes, unit),
+                "down": normalize_traffic(downbytes, unit),
+                "total": normalize_traffic(local_total, unit),
+                "happendate": date_str
+            })
+        return {"data": get_data_with_format(lst, format), "total": normalize_traffic(total_bytes, unit)}
 
 def aggregate_hourreport(response, format):
     unit = get_unit_from_format(format)
@@ -173,8 +202,8 @@ async def get_gw_traffic(query: GetGWTrafficParam):
     start_time_str = times[0]
     end_time_str = times[1]
     format = query.format
-
-    TABLE_NAME = "hourreport"
+    
+    TABLE_NAME = "gw_user_traffic_view"
     response = None
     if is_empty(gwid):
         response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
@@ -188,7 +217,7 @@ async def get_gw_traffic(query: GetGWTrafficParam):
             .execute())
     # 4. 归集结果
     print(f"[DEBUG][get_gw_traffic]:response.data = f{response.data}")
-    return aggregate_hourreport(response, format)
+    return aggregate_gw_user_traffic_view(response, format)
 
 class GetUserTrafficParam(BaseModel):
     gwid: str
