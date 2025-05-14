@@ -1098,7 +1098,8 @@ async def get_user_bandwidth(query: GetUserBandwidthQuery):
     d = get_date_obj_from_str(d)
     start_time_str = get_start_of_month(d, True)
     end_time_str = get_end_of_month(d, True)
-
+    ratio = get_ratio_by_gwid(gwid)
+    unit = "GB"
     if is_empty(gwid):
         response = (supabase
         .table('acctreport')
@@ -1127,7 +1128,7 @@ async def get_user_bandwidth(query: GetUserBandwidthQuery):
             up = up + int(float(entry.get("uptraffic")))
             down = down + int(float(entry.get("downtraffic")))
             total = total + up + down
-        return { "up": f"{normalize_traffic(up)}", "down": f"{normalize_traffic(down)}", "total": f"{normalize_traffic(total)}" }
+        return { "up": f"{normalize_traffic(up, unit, ratio)}", "down": f"{normalize_traffic(down, unit, ratio)}", "total": f"{normalize_traffic(total, unit, ratio)}" }
 
 class GetUserBandwidthDetailQuery(BaseModel):
     gwid: str
