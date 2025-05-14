@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request ,Depends,status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseSettings
 from dotenv import load_dotenv
 import asyncio
 from starlette.status import HTTP_504_GATEWAY_TIMEOUT
@@ -18,6 +18,17 @@ from .utils import gw_login, get_gateway_by_id
 import time
 from fastapi import Request, Response
 from starlette.types import ASGIApp
+
+# 环境变量配置类
+class Settings(BaseSettings):
+    app_name: str = "默认应用名称"
+    debug: bool = False
+    ratio_file: str # 网关流量比例所在的文件，以csv为结尾的文件名
+    class Config:
+        env_file = ".env"  # 从 .env 文件加载环境变量
+        env_prefix = "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
+
+
 
 # class DynamicTimeoutMiddleware:
 #     def __init__(self, app: ASGIApp):
@@ -38,7 +49,14 @@ from starlette.types import ASGIApp
 # 加载.env 文件
 
 app = FastAPI()
+settings = None
 
+@app.on_event("startup")
+async def startup_event():
+    global settings
+    # 读取环境变量
+    settings = Settings()
+    
 @app.middleware("http")
 async def timeout_middleware(request: Request, call_next):
     long_timeout_urls = {
@@ -98,7 +116,9 @@ async def list_virtual_group(request: ListVirtualGroupRequest):
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {
+        "app_name": settings.app_name
+    }
 
 class ConfigLoadRequest(BaseModel):
     gwid: str
