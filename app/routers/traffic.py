@@ -6,7 +6,7 @@ from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import get_digits, str2float, get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import get_ratio_by_gwid, get_digits, str2float, get_unit_from_format, parse_int, is_empty, is_not_empty, batch_update_gw_strategy, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import json
@@ -107,7 +107,7 @@ def get_bandwidth_strategy_impl(gwid:str):
                     result.append(val)
             return result
 
-def aggregate_gw_user_traffic_view(response, format):
+def aggregate_gw_user_traffic_view(gwid, response, format):
     """
     根据gw_user_traffic_view的结果，归集汇总流量数据。
     gw_user_traffic_view数据包括的列: happendate, gwid, up, down
@@ -115,6 +115,7 @@ def aggregate_gw_user_traffic_view(response, format):
     """
     # get_unit_from_format归集结果单位: GB
     unit = get_unit_from_format(format)
+    ratio = get_ratio_by_gwid(gwid)
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
     else:
@@ -130,57 +131,12 @@ def aggregate_gw_user_traffic_view(response, format):
             local_total = int(upbytes) + int(downbytes)
             total_bytes = total_bytes + int(upbytes) + int(downbytes)
             lst.append({
-                "up": normalize_traffic(upbytes, unit),
-                "down": normalize_traffic(downbytes, unit),
-                "total": normalize_traffic(local_total, unit),
+                "up": normalize_traffic(upbytes, unit, ratio),
+                "down": normalize_traffic(downbytes, unit, ratio),
+                "total": normalize_traffic(local_total, unit, ratio),
                 "happendate": date_str
             })
-        return {"data": get_data_with_format(lst, format), "total": normalize_traffic(total_bytes, unit)}
-
-def aggregate_hourreport(response, format):
-    unit = get_unit_from_format(format)
-    if len(response.data) <= 0:
-        return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
-    else:
-        # 将同一天的内容归集起来
-        # 1. 建立一个kv,key是日期，value是data
-        kv = {}
-        # 1.5 遍历response.data，拿出每一个数据d
-        for d in response.data:
-            happendate = d.get("happendate")
-            date = to_date(happendate)
-            date_str = date.strftime("%Y-%m-%d")
-            if date_str not in kv:
-                kv[date_str] = {
-                    "uptraffic": 0,
-                    "downtraffic": 0,
-                    "happendate": date_str
-                }
-            delta_up = int(d["uptraffic"])
-            delta_down = int(d["downtraffic"])
-            print(f"[DEBUG]: {date_str}: up = {delta_up}, down = {delta_down}")
-            kv[date_str]["uptraffic"] += int(d["uptraffic"])
-            kv[date_str]["downtraffic"] += int(d["downtraffic"])
-            print(f"[DEBUG]: {date_str}: info = {kv[date_str]}")
-       
-        # 2. 获取happendate, 将happendate的日期部分拿出来，作为key查询；
-        # 2.1 如果key不存在，则建立一个入口
-        # 2.2 如果key存在，则将uptraffic和downtraffic的值加总
-        # 3. 获取kv的keys，排序后生成list，将list中的uptraffic、downtraffic、total和happendate处理返回
-        print("[get_gw_traffic]: kv build finished")
-        print(f"[get_gw_traffic]: kv is {kv}")
-        lst = []
-        for date_str in sorted(kv):
-            value = kv.get(date_str)
-            up = value.get("uptraffic")
-            down = value.get("downtraffic")
-            lst.append({
-                "up": normalize_traffic(up, unit),
-                "down": normalize_traffic(down, unit),
-                "total": f"{normalize_traffic(int(up) + int(down), unit)}",
-                "happendate": date_str
-            })
-        return {"data": get_data_with_format(lst, format), "total": get_traffic_total(lst)}
+        return {"data": get_data_with_format(lst, format), "total": normalize_traffic(total_bytes, unit, ratio)}
 
 @traffic.post("/get_gw_traffic", tags=["traffic"])
 async def get_gw_traffic(query: GetGWTrafficParam):
@@ -217,7 +173,7 @@ async def get_gw_traffic(query: GetGWTrafficParam):
             .execute())
     # 4. 归集结果
     print(f"[DEBUG][get_gw_traffic]:response.data = f{response.data}")
-    return aggregate_gw_user_traffic_view(response, format)
+    return aggregate_gw_user_traffic_view(gwid, response, format)
 
 class GetUserTrafficParam(BaseModel):
     gwid: str
@@ -241,6 +197,7 @@ async def get_user_traffic(query: GetUserTrafficParam):
     format = query.format
     TABLE_NAME = "acctreport_view"
     response = None
+    ratio = get_ratio_by_gwid(gwid)
     # fix: 根据format的格式来选择使用的单位
     # 当格式为csv格式的时候，使用GB作为单位
     # 当格式是其他的时候，使用None(bytes)作为单位
@@ -275,9 +232,9 @@ async def get_user_traffic(query: GetUserTrafficParam):
             down = d["downtraffic"]
             list.append({
                 "acct": d["acct"],
-                "up": normalize_traffic(up, unit),
-                "down": normalize_traffic(down, unit),
-                "total": f"{normalize_traffic(float(up) + float(down), unit)}",
+                "up": normalize_traffic(up, unit, ratio),
+                "down": normalize_traffic(down, unit, ratio),
+                "total": f"{normalize_traffic(float(up) + float(down), unit, ratio)}",
                 "happendate": to_date(d["happendate"])
             })
         return {"data": get_data_with_format(list, format), "total": get_traffic_total(list)}
