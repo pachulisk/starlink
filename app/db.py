@@ -535,11 +535,13 @@ class GetBandwidthQuery(BaseModel):
 @DB.post("/get_bandwidth", tags=["DB"])
 async def get_bandwidth(query: GetBandwidthQuery):
     #上行带宽和下行带宽
-    #逻辑: 查hourreport表，筛选出当前小时的hourreport加和，返回上行带宽、下行带宽和总带宽
+    #逻辑: 查gateway_view表，筛选出网关对应的行，返回上行带宽、下行带宽和总带宽
     # 0. 获取gwid和date
     gwid = query.gwid
     d = query.date
-
+    # 获取ratio
+    unit = "GB"
+    ratio = get_ratio_by_gwid(gwid)
     d = get_date_obj_from_str(d)
     start_time_str = get_start_of_month(d, True)
     end_time_str = get_end_of_month(d, True)
@@ -558,8 +560,9 @@ async def get_bandwidth(query: GetBandwidthQuery):
     # end_time_stamp = to_timestamp(end_time)
     print(f"start_time = {start_time_str}, end_time = {end_time_str}")
     # 2. 查询
+    TABLE_NAME = "gateway_view"
     response = (supabase
-    .table('hourreport')
+    .table(TABLE_NAME)
     .select("*")
     .eq("gwid", gwid)
     .gte("happendate", start_time_str)
@@ -576,10 +579,10 @@ async def get_bandwidth(query: GetBandwidthQuery):
         down = 0
         total = 0
         for entry in response.data:
-            up = up + int(entry.get("uptraffic"))
-            down = down + int(entry.get("downtraffic"))
+            up = up + int(entry.get("up", 0))
+            down = down + int(entry.get("down", 0))
             total = total + up + down
-        return { "up": f"{up}", "down": f"{down}", "total": f"{total}" }
+        return { "up": f"{normalize_traffic(up, unit, ratio)}", "down": f"{normalize_traffic(down, unit, ratio)}", "total": f"{normalize_traffic(total, unit, ratio)}" }
 
 class GetTerminalAndConnsQuery(BaseModel):
     gwid: str
