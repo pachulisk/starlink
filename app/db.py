@@ -565,8 +565,8 @@ async def get_bandwidth(query: GetBandwidthQuery):
     .table(TABLE_NAME)
     .select("*")
     .eq("id", gwid)
-    .gte("happendate", start_time_str)
-    .lte("happendate", end_time_str)
+    # .gte("happendate", start_time_str)
+    # .lte("happendate", end_time_str)
     .execute())
     # 3. 归集结果
     # 3.1 如果查询结果为0， 则返回空值
