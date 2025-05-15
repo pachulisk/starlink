@@ -564,7 +564,7 @@ async def get_bandwidth(query: GetBandwidthQuery):
     response = (supabase
     .table(TABLE_NAME)
     .select("*")
-    .eq("gwid", gwid)
+    .eq("id", gwid)
     .gte("happendate", start_time_str)
     .lte("happendate", end_time_str)
     .execute())
