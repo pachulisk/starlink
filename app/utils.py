@@ -16,6 +16,8 @@ from multiping import multi_ping
 from contextlib import contextmanager
 
 
+settings = None
+
 env = os.environ.get('env')
 # if env is empty, set env to "test"
 if env is None:

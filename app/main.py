@@ -15,7 +15,7 @@ from . import db, task
 from .routers import auth2, traffic
 from .routers import account, weather
 from .routers import user, group
-from .utils import gw_login, get_gateway_by_id
+from .utils import settings, gw_login, get_gateway_by_id
 
 import time
 from fastapi import Request, Response
@@ -52,7 +52,6 @@ class Settings(BaseSettings):
 # 加载.env 文件
 
 app = FastAPI()
-settings = None
 
 async def get_csv_as_dict(file_path: str):
     result = {}
