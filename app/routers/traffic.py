@@ -227,9 +227,11 @@ async def get_user_traffic(query: GetUserTrafficParam):
         return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
     else:
         list = []
+        totalbytes = 0
         for d in response.data:
             up = d["uptraffic"]
             down = d["downtraffic"]
+            totalbytes = totalbytes + float(up) + float(down)
             list.append({
                 "acct": d["acct"],
                 "up": normalize_traffic(up, unit, ratio),
@@ -237,7 +239,7 @@ async def get_user_traffic(query: GetUserTrafficParam):
                 "total": f"{normalize_traffic(float(up) + float(down), unit, ratio)}",
                 "happendate": to_date(d["happendate"])
             })
-        return {"data": get_data_with_format(list, format), "total": get_traffic_total(list)}
+        return {"data": get_data_with_format(list, format), "total": normalize_traffic(totalbytes, unit, ratio)}
     
 class GetbandwidthStrategyParam(BaseModel):
     gwid: str
