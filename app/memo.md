@@ -57,6 +57,7 @@ ON
 
 SELECT 
     g.name as gateway_name,
+    t3.gwid,
     t3.userid,
     t3.username,
     t3.uptraffic,
