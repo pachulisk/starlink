@@ -1210,7 +1210,7 @@ async def get_device_list(query: GetAccountListQuery):
     #     .execute()
     # )
     # data = r.data
-    unit = "MB"
+    unit = "KB"
     ratio = get_ratio_by_gwid(gwid)
     # print(f"[DEBUG][get_device_list]: r.data = {data}")
     # lst = []
