@@ -1203,27 +1203,27 @@ def get_gw_online_status_by_id(gwid, id):
 @DB.post("/get_device_list", tags=["DB"])
 async def get_device_list(query: GetAccountListQuery):
     gwid = query.gwid
-    r = (supabase
-        .table("device_list")
-        .select("*")
-        .eq("gwid", gwid)
-        .execute()
-    )
-    data = r.data
-    unit = "GB"
+    # r = (supabase
+    #     .table("device_list")
+    #     .select("*")
+    #     .eq("gwid", gwid)
+    #     .execute()
+    # )
+    # data = r.data
+    unit = "MB"
     ratio = get_ratio_by_gwid(gwid)
-    print(f"[DEBUG][get_device_list]: r.data = {data}")
-    lst = []
-    for item in data:
-        device = {}
-        device["ip"] = item["ip"]
-        device["macaddr"] = item["macaddr"]
-        device["group"] = item["group"]
-        device["up"] = normalize_traffic(item["up"], unit, ratio)
-        device["down"] = normalize_traffic(item["down"], unit, ratio)
-        device["gwid"] = gwid
-        lst.append(device)
-
+    # print(f"[DEBUG][get_device_list]: r.data = {data}")
+    # lst = []
+    # for item in data:
+    #     device = {}
+    #     device["ip"] = item["ip"]
+    #     device["macaddr"] = item["macaddr"]
+    #     device["group"] = item["group"]
+    #     device["up"] = normalize_traffic(item["up"], unit, ratio)
+    #     device["down"] = normalize_traffic(item["down"], unit, ratio)
+    #     device["gwid"] = gwid
+    #     lst.append(device)
+    list = []
     with gw_login(gwid) as sdk_obj:
         r = sdk_obj.list_online_users(1000, "")
         r = get_basic_rpc_result(r)
@@ -1231,7 +1231,7 @@ async def get_device_list(query: GetAccountListQuery):
         print(r)
         r = json.loads(r)
         r = r["result"]
-        list = []
+        
         for item in r:
             device = {}
             device["ip"] = item["ip"]
@@ -1242,7 +1242,7 @@ async def get_device_list(query: GetAccountListQuery):
             device["gwid"] = gwid
             list.append(device)
         luigi.build([UpsertDeviceToSupabase(json.dumps(list))], local_scheduler=True)
-    return { "data": lst }
+    return { "data": list }
 
 def get_total_traffic(item, unit, ratio):
     up = item.get("uptraffic") or 0.0
