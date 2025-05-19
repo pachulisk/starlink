@@ -19,6 +19,7 @@ import json
 import re
 import luigi
 from .utils import get_device_count, str_strip, get_ratio_by_gwid, is_empty, is_not_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+import asyncio 
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1477,3 +1478,25 @@ async def test_get_device_count(query: TestGetDeviceCountQuery):
     gwid = query.gwid
     count = await get_device_count(gwid)
     return {"count": count}
+
+@DB.post("/test_all_gw_device_count", tags=["test"])
+async def test_all_gw_device_count():
+    """
+    获取所有网关的设备数量，以key/value的方式返回。
+    """
+    kv = {}
+    # 1. 从gateways获取所有的gwid，形成一个数组gws
+    response = supabase.table("gateway").select("*").execute()
+    gws = []
+    for r in response.data:
+        gwid = r.get("id")
+        gws.append(gwid)
+    # 2. 使用asyncio.gather来将每一个get_device_count(gwid)的结果，成为一个数组results
+    tasks = [get_device_count(gwid) for gwid in gws]
+    results = await asyncio.gather(*tasks)
+    # 3. 将gws和results一一配对，放到kv中返回
+    for i, gwid in enumerate(gws):
+        key = gws[i]
+        value = results[i]
+        kv[key] = value
+    return {"data": kv}
