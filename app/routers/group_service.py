@@ -2,7 +2,7 @@ import urllib
 
 from pydantic import BaseModel
 from ..utils import batch_update_users_group, batch_update_gw_group, get_basic_rpc_result, gw_login, normalize_traffic, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
-from app.supabase import supabase, to_date,str_strip
+from app.supabase import supabase, to_date
 
 def encode_username(username, useUrlEncode=True):
     """

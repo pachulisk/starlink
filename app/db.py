@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from app.utils import get_gateway_by_id
 from app.sdk import SDK
-from app.supabase import supabase, get_supabase_table_latest_row, build_sql_for_latest_row, get_db_for_table, meta_for_table_name, formalize_supabase_datetime, build_dict_from_line, to_date, str_strip
+from app.supabase import supabase, get_supabase_table_latest_row, build_sql_for_latest_row, get_db_for_table, meta_for_table_name, formalize_supabase_datetime, build_dict_from_line, to_date
 from .task import post_single_task
 import uuid
 from datetime import datetime, date, timedelta
@@ -18,7 +18,7 @@ from .task import TaskRequest, run_single_task
 import json
 import re
 import luigi
-from .utils import get_ratio_by_gwid, is_empty, is_not_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
+from .utils import get_device_count, str_strip, get_ratio_by_gwid, is_empty, is_not_empty, get_gw_users_list, get_basic_rpc_result, ping, upsert_user, haskv, getkv, setkv, gw_login, normalize_traffic
 
 # class DBParser(abc.ABC):
 #     def parse_table(self, table):
@@ -1467,3 +1467,13 @@ async def test_ping(query: TestPingQuery):
     server = query.server
     response = ping(server)
     return response
+
+class TestGetDeviceCountQuery(BaseModel):
+    gwid: str
+
+# 测试get_device_count
+@DB.post("/test_get_device_count", tags=["test"])
+async def test_get_device_count(query: TestGetDeviceCountQuery):
+    gwid = query.gwid
+    count = await get_device_count(gwid)
+    return {"count": count}

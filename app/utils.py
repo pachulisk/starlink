@@ -3,6 +3,7 @@ from app.supabase import supabase
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
 import re
+import json
 import time
 import ipaddress
 from fastapi import HTTPException
@@ -491,3 +492,32 @@ def get_ratio_by_gwid(gwid: str):
             ratio = settings.ratio_table.get(gwid, default_val)
             return ratio
     return default_val
+
+def str_strip(data):
+    if data is None:
+        return None
+    else:
+        ret = data.replace("\n", "")
+        ret = ret.replace("|", "")
+        return ret
+
+async def get_device_count(gwid):
+    """
+    根据gwid,获取网关的设备数量
+    如果发生错误，则返回0
+    """
+    try:
+        with gw_login(gwid) as sdk_obj:
+            r = sdk_obj.list_online_users(1000, "")
+            r = get_basic_rpc_result(r)
+            r = str_strip(r["result"])
+            print(r)
+            r = json.loads(r)
+            r = r["result"]
+
+            count = len(r)
+            print(f"[get_device_count]: gwid = {gwid}, count = {count}")
+            return count
+    except Exception as e:
+        print(f"Error occurred while getting device count for gwid {gwid}: {e}")
+        return 0

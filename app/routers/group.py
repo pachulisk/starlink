@@ -1,11 +1,11 @@
 import asyncio
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 import urllib
-from app.supabase import supabase, to_date,str_strip
+from app.supabase import supabase, to_date
 import uuid
 from ..sdk import SDK
 from ..task import TaskRequest, run_single_task
-from ..utils import is_empty, is_not_empty, batch_update_users_group, batch_update_gw_group, get_basic_rpc_result, gw_login, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
+from ..utils import str_strip, is_empty, is_not_empty, batch_update_users_group, batch_update_gw_group, get_basic_rpc_result, gw_login, get_date_obj_from_str, get_start_of_month, get_end_of_month, get_date
 from pydantic import BaseModel
 from datetime import datetime
 import json
