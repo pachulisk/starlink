@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
+from ..utils import gw_login, get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ def parse_valid_ipv4(addr):
     else:
         return ipv4
 
-def check_online_multi(addrs):
+def check_online_multi(addrs, gws=None):
     # addrs是候选的地址列表。
     # 需要返回一个kv, key是addrs中的每一个地址，value是True或者False,
     # True代表online, False代表offline
@@ -36,11 +36,13 @@ def check_online_multi(addrs):
     # 3. 从addrs中筛选出合法的ipv4地址，放到valid_ipv4中
     valid_ipv4 = []
     mapping = {}
-    for addr in addrs:
+    addr2gwid = {}
+    for i, addr in enumerate(addrs):
         candidate = parse_valid_ipv4(addr)
         if len(candidate) > 0:
             valid_ipv4.append(candidate)
             mapping[candidate] = addr
+            addr2gwid[addr] = gws[i] if gws is not None and i < len(gws) else None
     print("candidates = ", valid_ipv4)
     # 4. 对于所有valid_ipv4作为地址，传入到ping_multi_hosts
     multi_ping_result = ping_multi_hosts(valid_ipv4)
@@ -49,7 +51,14 @@ def check_online_multi(addrs):
         addr = mapping.get(key)
         if addr is None:
             continue
-        ret[addr] = True
+        gwid = addr2gwid.get(addr)
+        if gwid is None:
+            continue
+        try:
+            with gw_login(gwid) as _:
+                ret[addr] = True
+        except Exception as e:
+            continue
     # 6. 返回ret
     return ret
 
@@ -171,7 +180,7 @@ async def read_gateways():
     addrs = []
     for item in response.data:
         addrs.append(item.get("address"))
-    check_ip_result = check_online_multi(addrs)
+    check_ip_result = check_online_multi(addrs, gws)
 
     kvs = await get_gws_device_count(gws)
 
