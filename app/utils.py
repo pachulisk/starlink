@@ -11,6 +11,7 @@ from .sdk import SDK
 from datetime import datetime, date
 import calendar
 import os
+import asyncio
 from .config import Config
 from multiping import multi_ping
 
@@ -521,3 +522,22 @@ async def get_device_count(gwid):
     except Exception as e:
         print(f"Error occurred while getting device count for gwid {gwid}: {e}")
         return 0
+    
+async def get_gws_device_count(gws):
+    """
+    从给定网关列表，返回key/value对，key是网关id，value是网关的设备数量
+    """
+    kv = {}
+    response = supabase.table("gateway").select("*").execute()
+    gws = []
+    for r in response.data:
+        gwid = r.get("id")
+        gws.append(gwid)
+    # 2. 使用asyncio.gather来将每一个get_device_count(gwid)的结果，成为一个数组results
+    tasks = [get_device_count(gwid) for gwid in gws]
+    results = await asyncio.gather(*tasks)
+    for i, gwid in enumerate(gws):
+        key = gws[i]
+        value = results[i]
+        kv[key] = value
+    return kv

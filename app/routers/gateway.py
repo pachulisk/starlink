@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
+from ..utils import get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
@@ -159,6 +159,13 @@ async def read_gateways():
       "count": null
     }
     """
+    # 处理gws
+    gws = []
+    for item in response.data:
+        id = item.get("id")
+        gws.append(id)
+    
+
     list = []
     # 从response.data中，抽取address部分，做ip连通性检测
     addrs = []
@@ -166,14 +173,17 @@ async def read_gateways():
         addrs.append(item.get("address"))
     check_ip_result = check_online_multi(addrs)
 
+    kvs = await get_gws_device_count(gws)
+
     for item in response.data:
         gwid = item["id"]
         up = item.get("up") or 0
         down = item.get("down") or 0
         total_traffic = up + down
-        device_count = item.get("device_count") or 0
+        device_count = kvs.get(gwid, 0)
         user_count = item.get("user_count") or 0
         ratio = get_ratio_by_gwid(gwid)
+
         list.append({
             "id": item.get('id'),
             "name": item.get('name'),
