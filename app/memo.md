@@ -120,3 +120,8 @@ ORDER BY
     happendate, gwid;
     
 ```
+
+# 创建gw_users_count
+CREATE VIEW gw_users_count AS
+SELECT COUNT(*) AS count
+FROM user_traffic_view;    
