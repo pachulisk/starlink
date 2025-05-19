@@ -125,3 +125,55 @@ ORDER BY
 CREATE VIEW gw_users_count AS
 SELECT COUNT(*) AS count
 FROM user_traffic_view;    
+
+# 创建gateway_view
+
+CREATE VIEW gateway_view AS 
+
+WITH t3 AS (
+    SELECT 
+        g.id,
+        tr.up,
+        tr.down,
+        d.down as count,
+        u.count as user
+    FROM
+        gateway g
+    JOIN
+        total_traffic_group_by_gwid tr
+    ON
+        g.id::varchar = tr.gwid
+    JOIN
+        device_count_group_by_gwid d
+    ON
+        g.id::varchar = d.gwid
+    JOIN
+        gw_user_count_group_by_gwid u
+    ON 
+        g.id::varchar = u.gwid
+  GROUP BY 
+    g.id,
+    tr.up,
+    tr.down,
+    u.count
+)
+
+SELECT 
+    g.id,
+    g.name,
+    g.username,
+    g.port,
+    g.address,
+    g.password,
+    g.serial_no,
+    g.client_name,
+    g.enable_time,
+    g.online,
+    g.fleet,
+    t3.up,
+    t3.down,
+    t3.count AS device_count,
+    t3.user AS user_count
+FROM gateway g
+LEFT JOIN t3
+ON g.id::varchar = t3.id::varchar;
