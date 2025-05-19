@@ -533,6 +533,11 @@ class GetBandwidthQuery(BaseModel):
     gwid: str
     date: str | None
 
+def get_traffic(t):
+    if t is None:
+        return 0
+    return int(t)
+
 @DB.post("/get_bandwidth", tags=["DB"])
 async def get_bandwidth(query: GetBandwidthQuery):
     #上行带宽和下行带宽
@@ -580,8 +585,8 @@ async def get_bandwidth(query: GetBandwidthQuery):
         down = 0
         total = 0
         for entry in response.data:
-            up = up + int(entry.get("up", 0))
-            down = down + int(entry.get("down", 0))
+            up = up + get_traffic(entry.get("up", 0))
+            down = down + get_traffic(entry.get("down", 0))
             total = total + up + down
         return { "up": f"{normalize_traffic(up, unit, ratio)}", "down": f"{normalize_traffic(down, unit, ratio)}", "total": f"{normalize_traffic(total, unit, ratio)}" }
 
