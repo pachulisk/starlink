@@ -56,6 +56,7 @@ def check_online_multi(addrs, gws=None):
             continue
         try:
             with gw_login(gwid) as _:
+                print(f"[check_online_multi]: login success gwid={gwid}, addr={addr}")
                 ret[addr] = True
         except Exception as e:
             continue
