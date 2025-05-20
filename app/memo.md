@@ -80,6 +80,7 @@ RETURNS TEXT AS $$
 DECLARE
     start_pos INTEGER;
     end_pos INTEGER;
+    username text;
 BEGIN
     -- 检查字符串是否以CN%3d开头
     IF input_string LIKE 'CN%3d%' THEN
@@ -91,11 +92,14 @@ BEGIN
         
         -- 如果找到了%2c，提取中间的名字部分
         IF end_pos > 0 THEN
-            RETURN substring(input_string FROM start_pos FOR end_pos - start_pos);
+            username = substring(input_string FROM start_pos FOR end_pos - start_pos);
         ELSE
             -- 如果没有找到%2c，返回从CN%3d之后的所有内容
-            RETURN substring(input_string FROM start_pos);
+            username = substring(input_string FROM start_pos);
         END IF;
+        -- 替换%2d为'-'
+        username := replace(username, '%2d', '-');
+        RETURN username;
     ELSE
         -- 如果字符串不以CN%3d开头，返回NULL
         RETURN NULL;
@@ -177,3 +181,14 @@ SELECT
 FROM gateway g
 LEFT JOIN t3
 ON g.id::varchar = t3.id::varchar;
+
+# 创建temp_acct_traffic_view
+CREATE VIEW temp_acct_traffic_view AS 
+    SELECT 
+        extract_username(acct) AS tmp_username,
+        SUM(uptraffic::numeric) AS uptraffic,
+        SUM(downtraffic::numeric) AS downtraffic
+    FROM 
+        acctreport
+    GROUP BY 
+        extract_username(acct);
