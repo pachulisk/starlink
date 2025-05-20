@@ -1,3 +1,20 @@
+# 删除acctreport_view
+DROP VIEW acctreport_view;
+
+# 创建acctreport_view
+```
+CREATE VIEW acctreport_view AS 
+
+SELECT 
+    extract_username(acct) AS acct,
+    uptraffic::numeric AS uptraffic,
+    downtraffic::numeric AS downtraffic,
+    gwid,
+    happendate
+FROM 
+    acctreport
+```
+
 # 删除user_traffic_view
 DROP VIEW user_traffic_view;
 # 创建user_traffic_view
