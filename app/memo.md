@@ -3,7 +3,7 @@ DROP VIEW acctreport_view;
 
 # 创建acctreport_view
 ```
-CREATE VIEW acctreport_view AS 
+CREATE OR REPLACE VIEW acctreport_view AS 
 
 SELECT 
     extract_username(acct) AS acct,
@@ -20,7 +20,7 @@ DROP VIEW user_traffic_view;
 # 创建user_traffic_view
 ```
 -- 第一步：创建临时表 t1
-CREATE VIEW user_traffic_view AS 
+CREATE OR REPLACE VIEW user_traffic_view AS 
 WITH t1 AS (
     SELECT 
         extract_username(acct) AS tmp_username,
@@ -144,13 +144,13 @@ ORDER BY
 ```
 
 # 创建gw_users_count
-CREATE VIEW gw_users_count AS
+CREATE OR REPLACE VIEW gw_users_count AS
 SELECT COUNT(*) AS count
 FROM user_traffic_view;    
 
 # 创建gateway_view
 
-CREATE VIEW gateway_view AS 
+CREATE OR REPLACE VIEW gateway_view AS 
 
 WITH t3 AS (
     SELECT 
@@ -201,7 +201,7 @@ LEFT JOIN t3
 ON g.id::varchar = t3.id::varchar;
 
 # 创建temp_acct_traffic_view
-CREATE VIEW temp_acct_traffic_view AS 
+CREATE OR REPLACE VIEW temp_acct_traffic_view AS 
     SELECT 
         extract_username(acct) AS tmp_username,
         SUM(uptraffic::numeric) AS uptraffic,
