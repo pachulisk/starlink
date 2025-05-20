@@ -480,17 +480,22 @@ def is_online(ip):
     
 def get_ratio_by_gwid(gwid: str):
     default_val = 1.3
-    if gwid is None:    
+    if gwid is None:
+        print("[get_ratio_by_gwid]: gwid is None, return default value 1.3")    
         return default_val
     else:
         # 获取settings变量
+        
         if settings is None:
+            print("[get_ratio_by_gwid]: settings is None, return default value 1.3") 
             return default_val
         elif settings.ratio_table is None:
+            print("[get_ratio_by_gwid]: settings.ratio_table is None, return default value 1.3") 
             return default_val
         else:
             # 从ratio_table中获取ratio
-            ratio = settings.ratio_table.get(gwid, default_val)
+            print("f[get_ratio_by_gwid]: get ratio from settings.ratio_table, ratio_table is {settings.ratio_table}")
+            ratio = settings.ratio_table[gwid]
             return ratio
     return default_val
 
