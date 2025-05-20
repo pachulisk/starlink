@@ -99,6 +99,7 @@ BEGIN
         END IF;
         -- 替换%2d为'-'
         username := replace(username, '%2d', '-');
+        username := replace(username, '%2f', '/');
         RETURN username;
     ELSE
         -- 如果字符串不以CN%3d开头，返回NULL
