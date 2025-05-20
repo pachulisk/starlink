@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request ,Depends,status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings
 import csv
 from dotenv import load_dotenv
 import asyncio
@@ -21,15 +20,6 @@ import time
 from fastapi import Request, Response
 from starlette.types import ASGIApp
 
-# 环境变量配置类
-class Settings(BaseSettings):
-    app_name: str = "默认应用名称"
-    debug: bool = False
-    ratio_file: str # 网关流量比例所在的文件，以csv为结尾的文件名
-    ratio_table: any = None
-    class Config:
-        env_file = ".env"  # 从 .env 文件加载环境变量
-        env_prefix = "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
 
 
 
@@ -75,8 +65,8 @@ async def get_csv_as_dict(file_path: str):
 async def startup_event():
     global settings
     # 读取环境变量
-    settings = Settings()
     ratio_file = settings.ratio_file
+    print(f"[startup]: ratio file = {ratio_file}")
     if ratio_file is not None:
         settings.ratio_table = await get_csv_as_dict(ratio_file)
     

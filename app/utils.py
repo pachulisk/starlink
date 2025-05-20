@@ -14,11 +14,20 @@ import os
 import asyncio
 from .config import Config
 from multiping import multi_ping
-
+from pydantic_settings import BaseSettings
 from contextlib import contextmanager
 
+# 环境变量配置类
+class _Settings(BaseSettings):
+    app_name: str = "默认应用名称"
+    debug: bool = False
+    ratio_file: str # 网关流量比例所在的文件，以csv为结尾的文件名
+    ratio_table: any = None
+    class Config:
+        env_file = ".env"  # 从 .env 文件加载环境变量
+        env_prefix = "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
 
-settings = None
+settings = _Settings()
 
 env = os.environ.get('env')
 # if env is empty, set env to "test"
