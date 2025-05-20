@@ -140,7 +140,8 @@ async def list_virtual_group(request: ListVirtualGroupRequest):
 @app.get("/")
 def read_root():
     return {
-        "app_name": settings.app_name
+        "app_name": settings.app_name,
+        "settings.table": settings.ratio_table
     }
 
 class ConfigLoadRequest(BaseModel):
