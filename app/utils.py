@@ -494,7 +494,7 @@ def get_ratio_by_gwid(gwid: str):
             return default_val
         else:
             # 从ratio_table中获取ratio
-            print("f[get_ratio_by_gwid]: get ratio from settings.ratio_table, ratio_table is {settings.ratio_table}")
+            print(f"[get_ratio_by_gwid]: get ratio from settings.ratio_table, ratio_table is {settings.ratio_table}")
             ratio = settings.ratio_table[gwid]
             return ratio
     return default_val
