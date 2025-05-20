@@ -116,6 +116,7 @@ def aggregate_gw_user_traffic_view(gwid, response, format):
     # get_unit_from_format归集结果单位: GB
     unit = get_unit_from_format(format)
     ratio = get_ratio_by_gwid(gwid)
+    print(f"[aggregate_gw_user_traffic_view]: gwid = {gwid}, ratio = {ratio}, unit = {unit}")
     if len(response.data) <= 0:
         return {"data": get_data_with_format([], format), "total": get_traffic_total([])}
     else:
