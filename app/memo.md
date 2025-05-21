@@ -157,7 +157,6 @@ WITH t3 AS (
         g.id,
         tr.up,
         tr.down,
-        d.down as count,
         u.count as user
     FROM
         gateway g
@@ -165,10 +164,6 @@ WITH t3 AS (
         total_traffic_group_by_gwid tr
     ON
         g.id::varchar = tr.gwid
-    JOIN
-        device_count_group_by_gwid d
-    ON
-        g.id::varchar = d.gwid
     JOIN
         gw_user_count_group_by_gwid u
     ON 
@@ -194,7 +189,6 @@ SELECT
     g.fleet,
     t3.up,
     t3.down,
-    t3.count AS device_count,
     t3.user AS user_count
 FROM gateway g
 LEFT JOIN t3
@@ -210,3 +204,35 @@ CREATE OR REPLACE VIEW temp_acct_traffic_view AS
         acctreport
     GROUP BY 
         extract_username(acct);
+
+# 创建total_traffic_by_gwid
+CREATE OR REPLACE VIEW total_traffic_group_by_gwid AS
+SELECT gwid, SUM(uptraffic::numeric) as up, SUM(downtraffic::numeric) as down from "user_traffic_view"
+GROUP BY gwid;
+
+# 创建total_traffic
+CREATE OR REPLACE VIEW total_traffic AS
+SELECT SUM(uptraffic::numeric) as up, SUM(downtraffic::numeric) as down from "user_traffic_view";
+
+
+CREATE OR REPLACE VIEW temp_gateway_traffic_view AS 
+    SELECT 
+        g.id,
+        tr.up,
+        tr.down,
+        u.count as user
+    FROM
+        gateway g
+    JOIN
+        total_traffic_group_by_gwid tr
+    ON
+        g.id::varchar = tr.gwid
+    JOIN
+        gw_user_count_group_by_gwid u
+    ON 
+        g.id::varchar = u.gwid
+  GROUP BY 
+    g.id,
+    tr.up,
+    tr.down,
+    u.count;
