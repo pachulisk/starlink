@@ -212,6 +212,72 @@ async def read_gateways():
         })        
     return list
 
+@router.post("/get_full_gateways", tags=["gateway"])
+async def get_full_gateways():
+    # use supabase client to read all gateways from 'gateway' table
+    response = supabase.table("gateway_view").select("*").execute()
+    """
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "Afghanistan"
+        },
+        {
+          "id": 2,
+          "name": "Albania"
+        },
+        {
+          "id": 3,
+          "name": "Algeria"
+        }
+      ],
+      "count": null
+    }
+    """
+    # 处理gws
+    gws = []
+    for item in response.data:
+        id = item.get("id")
+        gws.append(id)
+    
+
+    list = []
+    # 从response.data中，抽取address部分，做ip连通性检测
+    addrs = []
+    for item in response.data:
+        addrs.append(item.get("address"))
+    check_ip_result = check_online_multi(addrs, gws)
+
+    kvs = await get_gws_device_count(gws)
+
+    for item in response.data:
+        gwid = item["id"]
+        up = item.get("up") or 0
+        down = item.get("down") or 0
+        total_traffic = up + down
+        device_count = kvs.get(gwid, 0)
+        user_count = item.get("user_count") or 0
+        ratio = get_ratio_by_gwid(gwid)
+
+        list.append({
+            "id": item.get('id'),
+            "name": item.get('name'),
+            "username": item.get('username'),
+            "port": item.get('port'),
+            "address": item.get('address'),
+            "password": item.get('password'),
+            "serial_no": item.get('serial_no'),
+            "client_name": item.get('client_name'),
+            "enable_time": item.get('enable_time'),
+            "online": check_ip_result.get(item.get("address")),
+            "fleet": item.get('fleet'), 
+            "total_traffic": normalize_traffic(total_traffic, "GB", ratio), # 网关流量
+            "device_count": device_count, # 网关设备数
+            "user_count": user_count, # 网关用户数
+        })        
+    return list
+
 # 创建
 @router.post("/add_gateway", tags=["gateway"])
 async def create_gateway(gw: Gateway):
