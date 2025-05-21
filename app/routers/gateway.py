@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
-from ..utils import gw_login, get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
+from ..utils import get_device_count, gw_login, get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
 
 router = APIRouter()
 
@@ -121,17 +121,23 @@ def get_total_traffic_by_gwid(gwid: str):
     else:
         return [0, 0]
     
-# 根据gwid查询设备数量
-def get_device_by_gwid(gwid: str):
+
+class GetDeviceCountByGwidQuery(BaseModel):
+    gwid: str    
+    
+@router.get("/get_device_count", tags=["gateway"])
+async def get_device_count_by_gwid(query: GetDeviceCountByGwidQuery):
     """
-    输入网关的gwid，获取网关的设备数量
+    根据gwid查询网关的设备
+    入参: gwid=网关id，不为空
+    返回值: device_count, 设备数量
     """
-    # 查询supabase的device_count_group_by_gwid表，查询count(*)
-    response = supabase.table("device_count_group_by_gwid").select("down").eq("gwid", gwid).execute()
-    if response.data:
-        return response.data[0]["down"]
-    else:
-        return 0
+    gwid = query.gwid
+    # 如果gwid为空则返回错误
+    if gwid is None or gwid == "":
+        raise HTTPException(status_code=400, detail="gwid为空")
+    count = await get_device_count(gwid)
+    return {"device_count": count }
 
 # 根据gwid查询用户数量
 def get_users_count_by_gwid(gwid: str):
