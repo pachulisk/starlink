@@ -189,14 +189,14 @@ async def read_gateways():
         addrs.append(item.get("address"))
     check_ip_result = check_online_multi(addrs, gws)
 
-    kvs = await get_gws_device_count(gws)
+    # kvs = await get_gws_device_count(gws)
 
     for item in response.data:
         gwid = item["id"]
         up = item.get("up") or 0
         down = item.get("down") or 0
         total_traffic = up + down
-        device_count = kvs.get(gwid, 0)
+        device_count = 0
         user_count = item.get("user_count") or 0
         ratio = get_ratio_by_gwid(gwid)
 
