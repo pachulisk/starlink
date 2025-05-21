@@ -603,13 +603,6 @@ def get_total_connection_count(r):
 @DB.post("/get_terminal_and_conns", tags=["DB"])
 async def get_terminal_and_conns(query: GetTerminalAndConnsQuery):
     gwid = query.gwid
-    r = (supabase
-        .table("gateway_view")
-        .select("device_count, user_count")
-        .eq("id", gwid)
-        .execute()
-        )
-    data = r.data[0]
     device_count = await get_device_count(gwid)
     total_terminal_count = device_count
     total_connection_count = total_terminal_count + random.randint(5, 100)
