@@ -204,7 +204,14 @@ async def get_user_traffic(query: GetUserTrafficParam):
     # 当格式是其他的时候，使用None(bytes)作为单位
     unit = get_unit_from_format(format)
     if is_empty(gwid):
-        response = supabase.table(TABLE_NAME).select("*").gte("happendate", start_time_str).lte("happendate", end_time_str).execute()
+        response = (
+            supabase.table(TABLE_NAME)
+            .select("*")
+            .gte("happendate", start_time_str)
+            .lte("happendate", end_time_str)
+            .order("happendate", desc=False)
+            .execute()
+        )
     else:
         if is_empty(user):
             response = (supabase
@@ -213,6 +220,7 @@ async def get_user_traffic(query: GetUserTrafficParam):
                 .eq("gwid", gwid)
                 .gte("happendate", start_time_str)
                 .lte("happendate", end_time_str)
+                .order("happendate", desc=False)
                 .execute())
         else:
             response = (supabase
@@ -222,6 +230,7 @@ async def get_user_traffic(query: GetUserTrafficParam):
                 .eq("acct", user)
                 .gte("happendate", start_time_str)
                 .lte("happendate", end_time_str)
+                .order("happendate", desc=False)
                 .execute())
     # 4. 归集结果
     if len(response.data) <= 0:
