@@ -125,7 +125,7 @@ def get_total_traffic_by_gwid(gwid: str):
 class GetDeviceCountByGwidQuery(BaseModel):
     gwid: str    
     
-@router.get("/get_device_count", tags=["gateway"])
+@router.post("/get_device_count", tags=["gateway"])
 async def get_device_count_by_gwid(query: GetDeviceCountByGwidQuery):
     """
     根据gwid查询网关的设备
