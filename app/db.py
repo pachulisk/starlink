@@ -612,7 +612,7 @@ async def get_terminal_and_conns(query: GetTerminalAndConnsQuery):
     data = r.data[0]
     device_count = await get_device_count(gwid)
     total_terminal_count = device_count
-    total_connection_count = total_terminal_count + random.randInt(5, 100)
+    total_connection_count = total_terminal_count + random.randint(5, 100)
     return { "total_terminal": f"{total_terminal_count}", "total_connection_count": f"{total_connection_count}"}
     # gw = await get_gateway_by_id(gwid)
     # if gw is None or len(gw.data) == 0:
