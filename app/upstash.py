@@ -15,4 +15,4 @@ key: str = cfg.UPSTASH_KEY
 print("upstash url = ", url)
 print("upstash key = ", key)
 
-redis = Redis(url="url", token=key)
+redis = Redis(url=url, token=key)
