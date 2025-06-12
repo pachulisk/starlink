@@ -503,6 +503,7 @@ def get_ratio_by_gwid_in_redis(gwid: str):
     key = f"starlink.gateway.ratio.{gwid}"
     # 连接redis
     value = redis.get(key)
+    print(f"[get_ratio_by_gwid_in_redis]: key = {key}, value = {value}")
     if value is None:
         return None
     else:
