@@ -529,7 +529,7 @@ def get_ratio_by_gwid(gwid: str):
         redis_value = get_ratio_by_gwid_in_redis(gwid)
         print(f"[get_ratio_by_gwid]: get gwid from redis, gwid is {gwid}, value is {redis_value}")
         if redis_value is not None:
-            print(f"[get_ratio_by_gwid], gwid is {gwid}, redis value is empty")
+            print(f"[get_ratio_by_gwid], gwid is {gwid}, redis value is {redis_value}")
             return redis_value
         # 获取settings变量
         
