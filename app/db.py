@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
-from app.utils import get_gateway_by_id
+from app.utils import set_ratio_by_gwid_in_redis, get_gateway_by_id
 from app.sdk import SDK
 from app.supabase import supabase, get_supabase_table_latest_row, build_sql_for_latest_row, get_db_for_table, meta_for_table_name, formalize_supabase_datetime, build_dict_from_line, to_date
 from .task import post_single_task
@@ -471,6 +471,30 @@ async def test_delay_add(query: TestDelayAddQuery):
     obj = { "a": a, "b": b }
     task_return = add.delay(obj)
     print("任务已提交任务ID:", task_return.id)
+
+class TestAddRedisKeyParam(BaseModel):
+    gwid: str
+    ratio: str
+
+@DB.post("/test_add_redis_key", tags=["tests"])
+async def test_add_redis_key(query: TestAddRedisKeyParam):
+    """
+    测试增加一个redis的key、value键值对
+    入参: 
+    gwid: string, 网关id
+    ratio: string, 网关的流量比率
+    返回值：
+    { "result": "success" }
+    """
+    gwid = query.gwid
+    ratio = query.ratio
+    # key和value都不能为空
+    if gwid is None or gwid == "" or ratio is None or ratio == ""
+        raise HTTPException(status_code=400, detail="key and ratio should not be empty")
+    # 调用set_ratio_by_gwid_in_redis来设置
+    set_ratio_by_gwid_in_redis(gwid, ratio)
+    return {"result": "success"}
+
 
 @DB.post("/sync_task_celery", tags=["tasks"])
 async def sync_task_celery(query: PostSyncTasks):

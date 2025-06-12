@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 from app.supabase import supabase
+from app.upstash import redis
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
 import re
@@ -486,13 +487,39 @@ def is_online(ip):
         return True
     else:
         return False
-    
+
+def get_ratio_by_gwid_in_redis(gwid: str):
+    """
+    在redis中，根据gwid来获取ratio
+    redis中的key标准如下:
+    "starlink.gateway.ratio.<gwid>" = ratio_value
+    """
+    key = f"starlink.gateway.ratio.{gwid}"
+    # 连接redis
+    value = redis.get(key)
+    return value
+
+def set_ratio_by_gwid_in_redis(gwid: str, ratio):
+    """
+    在redis中设置ratio
+    redis中的key标准如下:
+    "starlink.gateway.ratio.<gwid>" = ratio_value
+    """
+    key = f"starlink.gateway.ratio.{gwid}"
+    redis.set(key, ratio)
+
 def get_ratio_by_gwid(gwid: str):
     default_val = 1.3
     if gwid is None:
         print("[get_ratio_by_gwid]: gwid is None, return default value 1.3")    
         return default_val
     else:
+        # 首先从redis获取值
+        redis_value = get_ratio_by_gwid_in_redis(gwid)
+        print(f"[get_ratio_by_gwid]: get gwid from redis, gwid is {gwid}, value is {redis_value}")
+        if redis_value is not None:
+            print(f"[get_ratio_by_gwid], gwid is {gwid}, redis value is empty")
+            return redis_value
         # 获取settings变量
         
         if settings is None:

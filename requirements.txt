@@ -16,3 +16,4 @@ chromadb
 luigi
 pandas
 multiping
+upstash-redis
