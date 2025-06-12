@@ -489,7 +489,7 @@ async def test_add_redis_key(query: TestAddRedisKeyParam):
     gwid = query.gwid
     ratio = query.ratio
     # key和value都不能为空
-    if gwid is None or gwid == "" or ratio is None or ratio == ""
+    if gwid is None or gwid == "" or ratio is None or ratio == "":
         raise HTTPException(status_code=400, detail="key and ratio should not be empty")
     # 调用set_ratio_by_gwid_in_redis来设置
     set_ratio_by_gwid_in_redis(gwid, ratio)
