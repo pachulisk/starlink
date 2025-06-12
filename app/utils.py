@@ -451,7 +451,13 @@ def is_future_date(date_str):
         return given_date > current_date
     except ValueError:
         return False
-    
+
+def parse_float(str):
+    try:
+        data = float(str)
+    except ValueError:
+        return 0.0    
+
 def parse_int(str):
     try:
         data = float(str)
@@ -497,7 +503,7 @@ def get_ratio_by_gwid_in_redis(gwid: str):
     key = f"starlink.gateway.ratio.{gwid}"
     # 连接redis
     value = redis.get(key)
-    return value
+    return parse_float(value)
 
 def set_ratio_by_gwid_in_redis(gwid: str, ratio):
     """
