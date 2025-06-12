@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
-from app.utils import set_ratio_by_gwid_in_redis, get_gateway_by_id
+from app.utils import get_ratio_by_gwid_in_redis, set_ratio_by_gwid_in_redis, get_gateway_by_id
 from app.sdk import SDK
 from app.supabase import supabase, get_supabase_table_latest_row, build_sql_for_latest_row, get_db_for_table, meta_for_table_name, formalize_supabase_datetime, build_dict_from_line, to_date
 from .task import post_single_task
@@ -495,6 +495,12 @@ async def test_add_redis_key(query: TestAddRedisKeyParam):
     set_ratio_by_gwid_in_redis(gwid, ratio)
     return {"result": "success"}
 
+@DB.post("/test_get_gw_ratio", tags=["tests"])
+async def test_get_gw_ratio(gwid: str):
+    if gwid is None or gwid == "":
+        raise HTTPException(status_code=400, detail="key and ratio should not be empty")
+    ratio = get_ratio_by_gwid_in_redis(gwid)
+    return {"ratio": ratio}
 
 @DB.post("/sync_task_celery", tags=["tasks"])
 async def sync_task_celery(query: PostSyncTasks):
