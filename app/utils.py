@@ -455,6 +455,7 @@ def is_future_date(date_str):
 def parse_float(str):
     try:
         data = float(str)
+        return data
     except ValueError:
         return 0.0    
 
