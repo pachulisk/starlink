@@ -495,8 +495,12 @@ async def test_add_redis_key(query: TestAddRedisKeyParam):
     set_ratio_by_gwid_in_redis(gwid, ratio)
     return {"result": "success"}
 
+class TestGetGwRatioQuery(BaseModel):
+    gwid: str
+
 @DB.post("/test_get_gw_ratio", tags=["tests"])
-async def test_get_gw_ratio(gwid: str):
+async def test_get_gw_ratio(q: TestGetGwRatioQuery):
+    gwid = q.gwid
     if gwid is None or gwid == "":
         raise HTTPException(status_code=400, detail="key and ratio should not be empty")
     ratio = get_ratio_by_gwid_in_redis(gwid)
