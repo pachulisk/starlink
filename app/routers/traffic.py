@@ -82,6 +82,7 @@ def get_traffic_total(data):
         total += sub
     return total
     
+@traffic.post("/get_bandwidth_strategy_impl", tags=["traffic"])
 def get_bandwidth_strategy_impl(gwid:str):
     with gw_login(gwid) as sdk_obj:
         # 读取配置文件wfilter-isp
