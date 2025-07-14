@@ -311,6 +311,8 @@ async def batch_sync_strategy(query: TestBatchSyncStrategy):
     gwid = query.gwid
     strategy_list = get_bandwidth_strategy_impl(gwid)
     print("strategy_list = ", strategy_list)
+    # 在同步之前，先去掉现有的strategy
+    await batch_remove_strategy(gwid)
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
