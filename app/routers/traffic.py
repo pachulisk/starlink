@@ -294,6 +294,18 @@ async def test_batch_sync_strategy(query: TestBatchSyncStrategy):
     response = batch_update_gw_strategy(strategy_list)
     return { "data": response }
 
+@traffic.post("/batch_remove_strategy", tags=["traffic"])
+async def batch_remove_strategy(gwid:str):
+    """
+    批量删除策略
+    """
+    # 如果gwid为空，则抛出异常
+    if is_empty(gwid):
+        raise HTTPException(status_code=400, detail="gwid is required")
+    TABLE_NAME = "gw_bandwidth_strategy"
+    response = supabase.table(TABLE_NAME).delete().eq("gwid", gwid).execute()
+    return { "data": response }
+
 @traffic.post("/batch_sync_strategy", tags=["traffic"])
 async def batch_sync_strategy(query: TestBatchSyncStrategy):
     gwid = query.gwid
