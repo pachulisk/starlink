@@ -11,6 +11,7 @@ from app.sdk import SDK
 from .routers import gateway
 from .routers import auth
 from . import db, task
+from .routers import fee
 from .routers import auth2, traffic
 from .routers import account, weather
 from .routers import user, group
@@ -113,6 +114,7 @@ app.include_router(auth2.auth2)
 app.include_router(user.user)
 app.include_router(traffic.traffic)
 app.include_router(group.group)
+app.include_router(fee.fee)
 
 
 class ListVirtualGroupRequest(BaseModel):
