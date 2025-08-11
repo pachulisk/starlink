@@ -26,11 +26,13 @@ class _Settings(BaseSettings):
     ratio_table: any = None
     # 允许额外字段
     model_config = {
-        "extra": "allow"
+        "extra": "allow",
+        "env_file": ".env",  # 从 .env 文件加载环境变量
+        "env_prefix": "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
     }
-    class Config:
-        env_file = ".env"  # 从 .env 文件加载环境变量
-        env_prefix = "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
+    # class Config:
+    #     env_file = ".env"  # 从 .env 文件加载环境变量
+    #     env_prefix = "APP_"  # 环境变量前缀，例如 APP_DATABASE_URL
 
 settings = _Settings()
 
