@@ -155,7 +155,7 @@ def get_users_count_by_gwid(gwid: str):
 @router.get("/gateways/", tags=["gateway"])
 async def read_gateways():
     # use supabase client to read all gateways from 'gateway' table
-    response = supabase.table("gateway_view").select("*").execute()
+    response = supabase.table("gateway_monthly_view").select("*").execute()
     """
     {
       "data": [
