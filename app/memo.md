@@ -1,3 +1,23 @@
+# 创建get_current_year_month函数
+CREATE OR REPLACE FUNCTION get_current_year_month()
+RETURNS TEXT AS $$
+BEGIN
+    -- 使用to_char函数将当前日期转换为'yyyy-mm'格式
+    RETURN to_char(CURRENT_DATE, 'yyyy-mm');
+END;
+$$ LANGUAGE plpgsql;
+
+# SELECT get_current_year_month() as yyyymm;
+
+-- DROP VIEW acctreport_monthly_view;
+
+-- 创建acctreport_monthly_view
+CREATE OR REPLACE VIEW acctreport_monthly_view AS
+
+SELECT uptraffic, downtraffic, acct
+FROM acctreport
+WHERE SUBSTRING(CAST(happendate AS VARCHAR) FROM 1 FOR 7) = get_current_year_month();
+
 # 删除acctreport_view
 DROP VIEW acctreport_view;
 
@@ -14,6 +34,84 @@ SELECT
 FROM 
     acctreport
 ```
+-- 创建user_traffic_monthly_view
+
+CREATE OR REPLACE VIEW user_traffic_monthly_view AS 
+-- 第零步: 创建临时表t0, yyyymm是get_current_year_month
+WITH t0 AS (
+    SELECT get_current_year_month() as yyyymm
+),
+-- 第一步：创建临时表 t1
+ t1 AS (
+    SELECT 
+        extract_username(acct) AS tmp_username,
+        SUM(uptraffic::numeric) AS uptraffic,
+        SUM(downtraffic::numeric) AS downtraffic
+    FROM 
+        acctreport a
+    JOIN 
+        t0
+    ON
+        SUBSTRING(CAST(a.happendate AS VARCHAR) FROM 1 FOR 7) = t0.yyyymm
+    GROUP BY 
+        extract_username(acct)
+),
+-- 第二步：创建最终的新表
+ t2 AS (
+    SELECT 
+    gu.username AS username,
+    t1.uptraffic,
+    t1.downtraffic,
+    gu.gwid,
+    gu."group",
+    gu.online,
+    gu.datelimit,
+    gu.delete_mark,
+    gu.id as userid,
+    substring(gu.remark, 'ISP-1-(.*)') AS remark
+FROM 
+    t1
+RIGHT JOIN 
+    gw_users gu 
+ON 
+    t1.tmp_username = gu.username
+),
+ t3 AS (
+		SELECT 
+    t2.username AS username,
+    t2.uptraffic,
+    t2.downtraffic,
+    t2.gwid,
+    t2."group",
+    t2.online,
+    t2.datelimit,
+    t2.delete_mark,
+    t2.userid,
+    s.remark as remark,
+    s.id as sid
+FROM 
+    t2
+LEFT JOIN 
+    gw_bandwidth_strategy as s 
+ON 
+    t2.remark = s.id AND t2.gwid = s.gwid
+ )
+SELECT 
+    g.name as gateway_name,
+    t3.gwid,
+    t3.userid,
+    t3.username,
+    t3.uptraffic,
+    t3.downtraffic,
+    t3."group",
+    t3.online,
+    t3.datelimit,
+    t3.delete_mark,
+    t3.remark,
+    t3.sid
+FROM t3
+JOIN gateway g
+ON g.id::varchar = t3.gwid;
 
 # 删除user_traffic_view
 DROP VIEW user_traffic_view;
@@ -148,6 +246,53 @@ CREATE OR REPLACE VIEW gw_users_count AS
 SELECT COUNT(*) AS count
 FROM user_traffic_view;    
 
+-- 创建gateway_monthly_view
+
+CREATE OR REPLACE VIEW gateway_monthly_view AS 
+
+WITH t3 AS (
+    SELECT 
+        g.id,
+        tr.up,
+        tr.down,
+        u.count as user
+    FROM
+        gateway g
+    JOIN
+        total_traffic_monthly_by_gwid tr
+    ON
+        g.id::varchar = tr.gwid
+    JOIN
+        gw_user_count_group_by_gwid u
+    ON 
+        g.id::varchar = u.gwid
+  GROUP BY 
+    g.id,
+    tr.up,
+    tr.down,
+    u.count
+)
+
+SELECT 
+    g.id,
+    g.name,
+    g.username,
+    g.port,
+    g.address,
+    g.password,
+    g.serial_no,
+    g.client_name,
+    g.enable_time,
+    g.online,
+    g.fleet,
+    t3.up,
+    t3.down,
+    t3.user AS user_count
+FROM gateway g
+LEFT JOIN t3
+ON g.id::varchar = t3.id::varchar;
+
+
 # 创建gateway_view
 
 CREATE OR REPLACE VIEW gateway_view AS 
@@ -210,10 +355,18 @@ CREATE OR REPLACE VIEW total_traffic_group_by_gwid AS
 SELECT gwid, SUM(uptraffic::numeric) as up, SUM(downtraffic::numeric) as down from "user_traffic_view"
 GROUP BY gwid;
 
+-- 创建total_traffic_monthly_by_gwid
+CREATE OR REPLACE VIEW total_traffic_monthly_by_gwid AS
+SELECT gwid, SUM(uptraffic::numeric) as up, SUM(downtraffic::numeric) as down from "user_traffic_monthly_view"
+GROUP BY gwid;
+
 # 创建total_traffic
 CREATE OR REPLACE VIEW total_traffic AS
 SELECT SUM(uptraffic::numeric) as up, SUM(downtraffic::numeric) as down from "user_traffic_view";
 
+# 创建gateway_count
+CREATE OR REPLACE VIEW gateway_count AS 
+SELECT COUNT(*) AS count FROM gateway;
 
 CREATE OR REPLACE VIEW temp_gateway_traffic_view AS 
     SELECT 
