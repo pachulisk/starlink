@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 from app.supabase import supabase
 from app.upstash import redis
+from app.neo import neo
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
 import re
@@ -503,14 +504,20 @@ def is_online(ip):
 
 def get_ratio_by_gwid_in_redis(gwid: str):
     """
-    在redis中，根据gwid来获取ratio
-    redis中的key标准如下:
-    "starlink.gateway.ratio.<gwid>" = ratio_value
+    在neo4j中，根据gwid来获取ratio
     """
-    key = f"starlink.gateway.ratio.{gwid}"
-    # 连接redis
-    value = redis.get(key)
-    print(f"[get_ratio_by_gwid_in_redis]: key = {key}, value = {value}")
+    # key = f"starlink.gateway.ratio.{gwid}"
+    # 创建template
+    value = 1.3
+    query = """
+    MATCH (g:gateway {id: $id})
+    RETURN g.ratio AS ratio
+    """
+    results = neo.run_query(query, parameters={"id": gwid})
+    if results[0]:
+        value = results[0]['ratio']
+        
+    print(f"[get_ratio_by_gwid_in_redis]: key = {gwid}, value = {value}")
     if value is None:
         return None
     else:
@@ -522,8 +529,9 @@ def set_ratio_by_gwid_in_redis(gwid: str, ratio):
     redis中的key标准如下:
     "starlink.gateway.ratio.<gwid>" = ratio_value
     """
-    key = f"starlink.gateway.ratio.{gwid}"
-    redis.set(key, ratio)
+    # key = f"starlink.gateway.ratio.{gwid}"
+    # redis.set(key, ratio)
+    neo.upsert_gateway(gwid, ratio)
 
 def get_ratio_by_gwid(gwid: str):
     default_val = 1.3

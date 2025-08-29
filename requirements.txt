@@ -17,3 +17,4 @@ luigi
 pandas
 multiping
 upstash-redis
+neo4j
