@@ -514,7 +514,8 @@ def get_ratio_by_gwid_in_redis(gwid: str):
     RETURN g.ratio AS ratio
     """
     results = neo.run_query(query, parameters={"id": gwid})
-    if results[0]:
+    print(f"[get_ratio_by_gwid_in_redis]: results = {str(results)}")
+    if len(results) > 0:
         value = results[0]['ratio']
         
     print(f"[get_ratio_by_gwid_in_redis]: key = {gwid}, value = {value}")
