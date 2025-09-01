@@ -339,6 +339,32 @@ class UpdateUserTrafficStrategyQuery(BaseModel):
 def build_remark(sid):
     return f"ISP-1-{sid}"
 
+async def insert_user_strategy_logs(gwid, userid, old_sid, new_sid):
+    """
+    向user_strategy_logs表中，插入一条更新字段
+    """
+    # 检查gwid是否为空
+    if is_empty(gwid):
+        # 如果gwid为空，抛出异常
+        raise HTTPException(status_code=400, detail="[insert_user_strategy_logs]: gwid cannot be empty")
+    # 检查userid是否为空
+    if is_empty(userid):
+        raise HTTPException(status_code=400, detail="[insert_user_strategy_logs]: userid cannot be empty")
+    # 检查new_sid是否为空
+    if is_empty(new_sid):
+        raise HTTPException(status_code=400, detail="[insert_user_strategy_logs]: new_sid cannot be empty")
+    data = {
+        "old_sid": old_sid,
+        "new_sid": new_sid,
+        "gwid": gwid,
+        "user_id": userid 
+    }
+    print(f"[insert_user_strategy_logs]: data = {str(data)}")
+    TABLE_NAME = "user_strategy_logs"
+    response = supabase.table(TABLE_NAME).insert(data).execute()
+    print(f"[insert_user_strategy_logs]: result = {str(response)}")
+    return { "data": response }
+
 @traffic.post("/update_user_traffic_strategy", tags=["traffic"])
 async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
     gwid = query.gwid
@@ -372,6 +398,46 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
         ]
         luigi.build(tasks, local_scheduler=True)
         return { "data": result }
+    
+class SetUserMonthlyStrategyQuery(BaseModel):
+    gwid: str
+    userid: str
+    sid: str
+
+@traffic.post("/set_user_monthly_strategy", tags=["traffic"])
+async def set_user_monthly_strategy(query: SetUserMonthlyStrategyQuery)
+    """
+    设置用户原始月套餐，参数包括：
+    - gwid: 网关id，必填，【这里多租户要注意】
+    - userid: 用户id，必填
+    - sid: 策略id，必填
+    """
+    gwid = query.gwid
+    userid = query.userid
+    sid = query.sid
+    if is_empty(gwid):
+        raise HTTPException(status_code=400, detail="[set_user_monthly_strategy]: gwid cannot be empty")
+    if is_empty(userid):
+        raise HTTPException(status_code=400, detail="[set_user_monthly_strategy]: userid cannot be empty")
+    if is_empty(sid):
+        raise HTTPException(status_code=400, detail="[set_user_monthly_strategy]: sid cannot be empty")
+    #[TODO]: 检查gwid、userid和sid是否存在，暂时先不检查
+    # 表名称为user_monthly_strategy
+    TABLE_NAME = "user_monthly_strategy"
+    # 拼接global_id
+    global_id = f"{gwid}_{userid}"
+    # 设置data
+    data = {
+        "global_id": global_id,
+        "gwid": gwid,
+        "userid": userid,
+        "sid": sid
+    }
+    print(f"[set_user_monthly_strategy]: data = {str(data)}")
+    response = supabase.table(TABLE_NAME).upsert(data).execute()
+    print(f"[set_user_monthly_strategy]: resp = {str(response)}")
+    return {"success":"True", "message": f"{str(response)}"}
+
 
 class GetTrafficForUserQuery(BaseModel):
     username: str
