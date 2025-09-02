@@ -1,3 +1,28 @@
+-- 创建user_monthly_strategy_view
+CREATE OR REPLACE VIEW user_monthly_strategy_view AS 
+WITH t AS (
+		SELECT 
+    ums.gwid AS gwid,
+    ums.userid as userid,
+    ums.sid as sid,
+    s.remark as remark,
+    ums.created_at as created_at
+FROM 
+    user_monthly_strategy ums
+LEFT JOIN 
+    gw_bandwidth_strategy as s 
+ON 
+    ums.sid = s.id AND ums.gwid = s.gwid
+ )
+SELECT 
+    t.gwid,
+    t.userid,
+    t.sid,
+    t.remark,
+    t.created_at
+FROM 
+    t;
+
 # 创建get_current_year_month函数
 CREATE OR REPLACE FUNCTION get_current_year_month()
 RETURNS TEXT AS $$
