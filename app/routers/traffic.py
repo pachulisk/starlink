@@ -445,17 +445,7 @@ class SyncUserMonthlyStrategyQuery(BaseModel):
     gwid: str
     userid: str
 
-@traffic.post("/sync_user_monthly_strategy", tags=["traffic"])
-async def sync_user_monthly_strategy(query: SyncUserMonthlyStrategyQuery):
-    """
-    sync_user_monthly_strategy
-    同步给定网关上用户的每月初始策略，到当前用户的策略。
-    输入:
-    - gwid: 网关id
-    - userid: 用户id
-    """
-    gwid = query.gwid
-    userid = query.userid
+async def sync_user_monthly_strategy_impl(gwid:str, userid:str):
     if is_empty(gwid):
         raise HTTPException(status_code=400, detail="[sync_user_monthly_strategy]gwid不能为空") 
     if is_empty(userid):
@@ -467,6 +457,19 @@ async def sync_user_monthly_strategy(query: SyncUserMonthlyStrategyQuery):
         raise HTTPException(status_code=400, detail="[sync_user_monthly_strategy]没有相关记录")
     sid = resp.data[0]["sid"]
     return update_user_traffic_strategy_impl(gwid, userid, sid)
+
+@traffic.post("/sync_user_monthly_strategy", tags=["traffic"])
+async def sync_user_monthly_strategy(query: SyncUserMonthlyStrategyQuery):
+    """
+    sync_user_monthly_strategy
+    同步给定网关上用户的每月初始策略，到当前用户的策略。
+    输入:
+    - gwid: 网关id
+    - userid: 用户id
+    """
+    gwid = query.gwid
+    userid = query.userid
+    return sync_user_monthly_strategy_impl(gwid, userid)
 
 class GetUserMonthlyStrategyQuery(BaseModel):
     gwid: str
