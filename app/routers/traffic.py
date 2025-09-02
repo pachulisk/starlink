@@ -365,11 +365,7 @@ async def insert_user_strategy_logs(gwid, userid, old_sid, new_sid):
     print(f"[insert_user_strategy_logs]: result = {str(response)}")
     return { "data": response }
 
-@traffic.post("/update_user_traffic_strategy", tags=["traffic"])
-async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
-    gwid = query.gwid
-    userid = query.userid
-    sid = query.sid
+async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
     with gw_login(gwid) as sdk_obj:
         # $values = "{\"enabled\":\"false\"}";    //把规则状态改成不启用
         # $result = $ngf->config_set( "wfilter-appcontrol",  "rule12345", $values );
@@ -398,6 +394,13 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
         ]
         luigi.build(tasks, local_scheduler=True)
         return { "data": result }
+
+@traffic.post("/update_user_traffic_strategy", tags=["traffic"])
+async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
+    gwid = query.gwid
+    userid = query.userid
+    sid = query.sid
+    return update_user_traffic_strategy_impl(gwid, userid, sid)
     
 class SetUserMonthlyStrategyQuery(BaseModel):
     gwid: str
@@ -438,6 +441,32 @@ async def set_user_monthly_strategy(query: SetUserMonthlyStrategyQuery):
     print(f"[set_user_monthly_strategy]: resp = {str(response)}")
     return {"success":"True", "message": f"{str(response)}"}
 
+class SyncUserMonthlyStrategyQuery(BaseModel):
+    gwid: str
+    userid: str
+
+@traffic.post("/sync_user_monthly_strategy", tags=["traffic"])
+async def sync_user_monthly_strategy(query: SyncUserMonthlyStrategyQuery):
+    """
+    sync_user_monthly_strategy
+    同步给定网关上用户的每月初始策略，到当前用户的策略。
+    输入:
+    - gwid: 网关id
+    - userid: 用户id
+    """
+    gwid = query.gwid
+    userid = query.userid
+    if is_empty(gwid):
+        raise HTTPException(status_code=400, detail="[sync_user_monthly_strategy]gwid不能为空") 
+    if is_empty(userid):
+        raise HTTPException(status_code=400, detail="[sync_user_monthly_strategy]userid不能为空") 
+    # 相关表：user_monthly_strategy
+    TABLE_NAME = "user_monthly_strategy"
+    resp = supabase.table(TABLE_NAME).select("*").eq("gwid", gwid).eq("userid", userid).execute()
+    if len(resp.data) <= 0:
+        raise HTTPException(status_code=400, detail="[sync_user_monthly_strategy]没有相关记录")
+    sid = resp.data[0]["sid"]
+    return update_user_traffic_strategy_impl(gwid, userid, sid)
 
 class GetUserMonthlyStrategyQuery(BaseModel):
     gwid: str
