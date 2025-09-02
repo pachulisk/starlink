@@ -439,6 +439,27 @@ async def set_user_monthly_strategy(query: SetUserMonthlyStrategyQuery):
     return {"success":"True", "message": f"{str(response)}"}
 
 
+class GetUserMonthlyStrategyQuery(BaseModel):
+    gwid: str
+    userid: str
+
+@traffic.post("/get_user_monthly_strategy", tags=["traffic"])
+async def get_user_monthly_strategy(query: GetUserMonthlyStrategyQuery):
+    gwid = query.gwid
+    userid = query.userid
+    TABLE_NAME = "user_monthly_strategy_view"
+    if is_empty(gwid):
+        # 选出所有的网关的所有用户(多租户注意)
+        resp = supabase.table(TABLE_NAME).select("*").execute()
+        return { "data": resp }
+    elif is_empty(userid):
+        # 选出该网关下的所有用户
+        resp = supabase.table(TABLE_NAME).select("*").eq("gwid", gwid).execute()
+        return {"data": resp}
+    else:
+        resp = supabase.table(TABLE_NAME).select("*").eq("gwid", gwid).eq("userid", userid).execute()
+        return {"data": resp}
+
 class GetTrafficForUserQuery(BaseModel):
     username: str
     gwid: str
