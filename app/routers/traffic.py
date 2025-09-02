@@ -405,7 +405,7 @@ class SetUserMonthlyStrategyQuery(BaseModel):
     sid: str
 
 @traffic.post("/set_user_monthly_strategy", tags=["traffic"])
-async def set_user_monthly_strategy(query: SetUserMonthlyStrategyQuery)
+async def set_user_monthly_strategy(query: SetUserMonthlyStrategyQuery):
     """
     设置用户原始月套餐，参数包括：
     - gwid: 网关id，必填，【这里多租户要注意】
