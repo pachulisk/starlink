@@ -458,6 +458,37 @@ async def sync_user_monthly_strategy_impl(gwid:str, userid:str):
     sid = resp.data[0]["sid"]
     return update_user_traffic_strategy_impl(gwid, userid, sid)
 
+class SyncGatewayUserMonthlyStrategyQuery(BaseModel):
+    gwid: str
+
+@traffic.post("/sync_gateway_user_monthly_strategy", tags=["traffic"])
+async def sync_gateway_user_monthly_strategy(query: SyncGatewayUserMonthlyStrategyQuery):
+    """
+    同步网关上所有用户的初始月流量。
+    输入参数:
+    gwid: 网关id
+    逻辑：
+    - 查询user_monthly_strategy表，根据给定的gwid进行查询
+    - 遍历查询出的所有gwid、userid
+    - 调用sync_user_monthly_strategy_impl，挨个同步
+    """
+    gwid = query.gwid
+    if is_empty(gwid):
+        raise HTTPException(status_code=400, detail="[sync_gateway_user_monthly_strategy]gwid不能为空") 
+    TABLE_NAME = "user_monthly_strategy"
+    resp = supabase.table(TABLE_NAME).select("*").eq("gwid", gwid).execute()
+    ret = []
+    for row in resp.data:
+        userid = row["userid"]
+        r = await sync_user_monthly_strategy_impl(gwid, userid)
+        ret.append({
+            "gwid": gwid,
+            "userid": userid,
+            "result": r
+        })
+    return {"data": ret }
+
+
 @traffic.post("/sync_user_monthly_strategy", tags=["traffic"])
 async def sync_user_monthly_strategy(query: SyncUserMonthlyStrategyQuery):
     """
