@@ -660,6 +660,16 @@ class GetUserTrafficRechargeBillQuery(BaseModel):
 
 @traffic.post("/get_user_traffic_recharge_bill", tags=["traffic"])
 async def get_user_traffic_recharge_bill(query: GetUserTrafficRechargeBillQuery):
+    """
+    get_user_traffic_recharge_bill，获取用户充值历史记录
+    入参1： 必选，gwid，网关的id
+    入参2：必选，userid，用户的id
+    入参3：必选，date， 当前的年月，格式为yyyy-mm
+    返回值：data是一个数组，包含若干记录，每一条记录中包含:
+    traffic_increment: 充值流量，数字，单位GB
+    username： 用户名
+    remark: 总流量，string，格式为“xxGB”
+    """
     gwid = query.gwid
     userid = query.userid
     d = query.date
@@ -676,6 +686,45 @@ async def get_user_traffic_recharge_bill(query: GetUserTrafficRechargeBillQuery)
     response = (supabase
         .table(TABLE_NAME)
         .select("*")
+        .eq("gwid", gwid)
+        .eq("userid", userid)
+        .gte("record_time", start_time_str)
+        .lte("record_time", end_time_str)
+        .execute())
+    return {"data": response.data}
+
+class GetGatewayMonthlyTrafficRechargeBillQuery(BaseModel):
+    gwid: str
+    date: str
+
+@traffic.post("/get_gateway_monthly_traffic_recharge_bill", tags=["traffic"])
+async def get_gateway_monthly_traffic_recharge_bill(query: GetGatewayMonthlyTrafficRechargeBillQuery):
+    """
+    get_gateway_monthly_traffic_recharge_bill，获取整个网关所有用户在某月的充值记录
+    入参1： 必选，gwid，网关的id
+    入参2：必选，date， 当前的年月，格式为yyyy-mm
+    返回值：data是一个数组，包含若干记录，每一条记录中包含:
+    traffic_increment: 充值流量，数字，单位GB
+    username： 用户名
+    remark: 总流量，string，格式为“xxGB”
+    """
+    gwid = query.gwid
+    userid = query.userid
+    d = query.date
+    # 检查gwid不为空
+    if is_empty(gwid):
+        raise HTTPException(status_code=400, detail="[get_user_traffic_recharge_bill] gwid cannot be empty")
+    # 检查userid不为空
+    if is_empty(userid):
+        raise HTTPException(status_code=400, detail="[get_user_traffic_recharge_bill] userid cannot be empty")
+    d = get_date_obj_from_str(d)
+    start_time_str = get_start_of_month(d, True)
+    end_time_str = get_end_of_month(d, True)
+    TABLE_NAME = "user_strategy_logs_view"
+    response = (supabase
+        .table(TABLE_NAME)
+        .select("*")
+        .eq("gwid", gwid)
         .gte("record_time", start_time_str)
         .lte("record_time", end_time_str)
         .execute())
