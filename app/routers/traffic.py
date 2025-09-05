@@ -339,6 +339,25 @@ class UpdateUserTrafficStrategyQuery(BaseModel):
 def build_remark(sid):
     return f"ISP-1-{sid}"
 
+def extract_remark(s):
+    """
+    从符合"ISP-1-{xxx}"格式的字符串中提取{xxx}部分的ID
+    
+    参数:
+        s (str): 符合格式的输入字符串
+    
+    返回:
+        str: 提取出的ID部分，如果格式不符合则返回空字符串
+    """
+    # 检查字符串是否以"ISP-1-"开头
+    prefix = "ISP-1-"
+    if s.startswith(prefix):
+        # 提取前缀之后的部分作为ID
+        return s[len(prefix):]
+    else:
+        # 如果格式不符合，返回空字符串或可以根据需要抛出异常
+        return s
+
 async def insert_user_strategy_logs(gwid, userid, old_sid, new_sid):
     """
     向user_strategy_logs表中，插入一条更新字段
@@ -365,6 +384,16 @@ async def insert_user_strategy_logs(gwid, userid, old_sid, new_sid):
     print(f"[insert_user_strategy_logs]: result = {str(response)}")
     return { "data": response }
 
+
+async def fetch_user_sid(gwid:str, userid:str):
+    TABLE_NAME = "gw_users"
+    global_id = f"{gwid}_{userid}"
+    response = (supabase.table(TABLE_NAME).select("*").eq("global_id", global_id)).execute()
+    if len(response.data) > 0:
+        return extract_remark(response.data[0].get("remark"))
+    else:
+        return ""
+
 async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
     with gw_login(gwid) as sdk_obj:
         # $values = "{\"enabled\":\"false\"}";    //把规则状态改成不启用
@@ -377,6 +406,9 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
         result = sdk_obj.config_set(cfgname, section, values)
         # 应用配置更新
         sdk_obj.config_apply()
+
+        # 获取用户的sid
+        old_sid = await fetch_user_sid(gwid, userid)
         # 更新supabase上的gw_users表中，对应的用户名称
         # global_id = gwid + "_" + userid
         global_id = f"{gwid}_{userid}"
@@ -388,6 +420,10 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
         response = (supabase.table(TABLE_NAME).update(kv).eq("global_id", global_id)).execute()
         print("result = ", result)
         print("response = ", response)
+        
+        # 插入用户策略更新日志
+        await insert_user_strategy_logs(gwid, userid, old_sid, sid)
+
         # 启动luigi任务，同步用户表到supabase
         tasks = [
             SyncGwUsers(gwid=gwid),
