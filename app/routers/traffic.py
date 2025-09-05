@@ -652,3 +652,31 @@ async def batch_get_traffic_for_user(gwid: str, info: UploadFile):
         outputs.append(result)
     info.file.close()
     return {"data": get_data_with_format(outputs, 'csv')}
+
+class GetUserTrafficRechargeBillQuery(BaseModel):
+    gwid: str
+    userid: str
+    date: str
+
+@traffic.post("/get_user_traffic_recharge_bill", tags=["traffic"])
+async def get_user_traffic_recharge_bill(query: GetUserTrafficRechargeBillQuery):
+    gwid = query.gwid
+    userid = query.userid
+    d = query.date
+    # 检查gwid不为空
+    if is_empty(gwid):
+        raise HTTPException(status_code=400, detail="[get_user_traffic_recharge_bill] gwid cannot be empty")
+    # 检查userid不为空
+    if is_empty(userid):
+        raise HTTPException(status_code=400, detail="[get_user_traffic_recharge_bill] userid cannot be empty")
+    d = get_date_obj_from_str(d)
+    start_time_str = get_start_of_month(d, True)
+    end_time_str = get_end_of_month(d, True)
+    TABLE_NAME = "user_strategy_logs_view"
+    response = (supabase
+        .table(TABLE_NAME)
+        .select("*")
+        .gte("record_time", start_time_str)
+        .lte("record_time", end_time_str)
+        .execute())
+    return {"data": response.data}

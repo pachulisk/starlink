@@ -1,3 +1,69 @@
+-- 创建user_strategy_logs_view
+CREATE OR REPLACE VIEW user_strategy_logs_view AS
+WITH t0 AS (
+        SELECT
+    usl.created_at as created_at,
+    usl.user_id as userid,
+    usl.gwid as gwid,
+    usl.new_sid as sid,
+    s.remark as remark
+FROM
+    user_strategy_logs usl
+LEFT JOIN
+    gw_bandwidth_strategy as s 
+ON
+    usl.new_sid = s.id AND usl.gwid = s.gwid
+),
+converted_data AS (
+  -- 第一步：将字符串格式的流量值转换为数字
+  SELECT 
+    t0.created_at as record_time,
+    t0.remark as remark,
+    t0.sid as sid,
+    t0.gwid as gwid,
+    t0.userid as userid,
+    gu.username as username,
+    -- 提取数字部分并转换为数值类型（处理"G"和"GB"后缀）
+    CAST(REGEXP_REPLACE(t0.remark, '[^0-9.]', '', 'g') AS NUMERIC) AS total_traffic
+  FROM t0
+  LEFT JOIN 
+    gw_users as gu
+  ON
+    t0.userid = gu.id AND t0.gwid = gu.gwid
+),
+increment_calculation AS (
+  -- 第二步：计算增量（包含月初清零逻辑）
+  SELECT 
+    converted_data.record_time as record_time,
+    converted_data.remark as remark,
+    converted_data.sid as sid,
+    converted_data.gwid as gwid,
+    converted_data.userid as userid,
+    converted_data.username as username,
+    record_time AS increment_time,
+    CASE 
+      -- 第一条记录：增量等于当前流量值
+      WHEN LAG(record_time) OVER (ORDER BY record_time) IS NULL THEN total_traffic
+      -- 跨月记录（月初）：从0开始，增量等于当前流量值
+      WHEN DATE_TRUNC('month', record_time) <> DATE_TRUNC('month', LAG(record_time) OVER (ORDER BY record_time)) THEN total_traffic
+      -- 同月内：正常计算差值
+      ELSE total_traffic - LAG(total_traffic) OVER (ORDER BY record_time)
+    END AS traffic_increment
+  FROM converted_data
+  ORDER BY record_time
+)
+SELECT 
+  record_time,
+  remark, 
+  sid,
+  gwid,
+  userid,
+  increment_time,
+  traffic_increment,
+  username
+FROM increment_calculation;
+
+
 -- 创建user_monthly_strategy_view
 CREATE OR REPLACE VIEW user_monthly_strategy_view AS 
 WITH t AS (
