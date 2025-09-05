@@ -400,7 +400,7 @@ async def update_user_traffic_strategy(query: UpdateUserTrafficStrategyQuery):
     gwid = query.gwid
     userid = query.userid
     sid = query.sid
-    return update_user_traffic_strategy_impl(gwid, userid, sid)
+    return await update_user_traffic_strategy_impl(gwid, userid, sid)
     
 class SetUserMonthlyStrategyQuery(BaseModel):
     gwid: str
@@ -456,7 +456,7 @@ async def sync_user_monthly_strategy_impl(gwid:str, userid:str):
     if len(resp.data) <= 0:
         raise HTTPException(status_code=400, detail="[sync_user_monthly_strategy]没有相关记录")
     sid = resp.data[0]["sid"]
-    return update_user_traffic_strategy_impl(gwid, userid, sid)
+    return await update_user_traffic_strategy_impl(gwid, userid, sid)
 
 class SyncGatewayUserMonthlyStrategyQuery(BaseModel):
     gwid: str
