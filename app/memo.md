@@ -66,7 +66,7 @@ FROM increment_calculation;
 
 -- 创建user_monthly_strategy_view
 CREATE OR REPLACE VIEW user_monthly_strategy_view AS 
-WITH t AS (
+WITH t0 AS (
 		SELECT 
     ums.gwid AS gwid,
     ums.userid as userid,
@@ -79,13 +79,31 @@ LEFT JOIN
     gw_bandwidth_strategy as s 
 ON 
     ums.sid = s.id AND ums.gwid = s.gwid
- )
+ ),
+t AS (
+SELECT 
+    t0.gwid as gwid,
+    t0.userid as userid,
+    t0.sid as sid,
+    t0.remark as remark,
+    t0.created_at as created_at,
+    utv.username as username,
+    utv.gateway_name as gateway_name
+FROM
+    t0
+LEFT JOIN
+    user_traffic_view as utv
+ON
+    t0.gwid = utv.gwid AND t0.userid = utv.userid
+)
 SELECT 
     t.gwid,
     t.userid,
     t.sid,
     t.remark,
-    t.created_at
+    t.created_at,
+    t.username,
+    t.gateway_name
 FROM 
     t;
 
