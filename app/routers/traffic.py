@@ -536,7 +536,7 @@ async def sync_user_monthly_strategy(query: SyncUserMonthlyStrategyQuery):
     """
     gwid = query.gwid
     userid = query.userid
-    return sync_user_monthly_strategy_impl(gwid, userid)
+    return await sync_user_monthly_strategy_impl(gwid, userid)
 
 class GetUserMonthlyStrategyQuery(BaseModel):
     gwid: str
