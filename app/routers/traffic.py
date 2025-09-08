@@ -709,14 +709,10 @@ async def get_gateway_monthly_traffic_recharge_bill(query: GetGatewayMonthlyTraf
     remark: 总流量，string，格式为“xxGB”
     """
     gwid = query.gwid
-    userid = query.userid
     d = query.date
     # 检查gwid不为空
     if is_empty(gwid):
         raise HTTPException(status_code=400, detail="[get_user_traffic_recharge_bill] gwid cannot be empty")
-    # 检查userid不为空
-    if is_empty(userid):
-        raise HTTPException(status_code=400, detail="[get_user_traffic_recharge_bill] userid cannot be empty")
     d = get_date_obj_from_str(d)
     start_time_str = get_start_of_month(d, True)
     end_time_str = get_end_of_month(d, True)
