@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from app.utils import get_ratio_by_gwid_in_redis, set_ratio_by_gwid_in_redis, get_gateway_by_id
@@ -474,7 +474,7 @@ async def test_delay_add(query: TestDelayAddQuery):
 
 class TestAddRedisKeyParam(BaseModel):
     gwid: str
-    ratio: str
+    ratio: Any
 
 @DB.post("/test_add_redis_key", tags=["tests"])
 async def test_add_redis_key(query: TestAddRedisKeyParam):
