@@ -62,7 +62,7 @@ class Neo4jConnection:
                     return {
                         "id": record["id"],
                         "ratio": record["ratio"],
-                        "status": "updated" if result.consumed_entities > 0 else "created"
+                        "status": "created"
                     }
                 return None
         except exceptions.AuthError:
