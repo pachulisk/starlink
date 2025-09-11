@@ -15,7 +15,7 @@ from .routers import fee
 from .routers import auth2, traffic
 from .routers import account, weather
 from .routers import user, group
-from .routers import admin_router
+from .routers import admin
 from .utils import settings, gw_login, get_gateway_by_id
 
 import time
@@ -116,6 +116,7 @@ app.include_router(user.user)
 app.include_router(traffic.traffic)
 app.include_router(group.group)
 app.include_router(fee.fee)
+app.include_router(admin.admin_router)
 
 
 class ListVirtualGroupRequest(BaseModel):
