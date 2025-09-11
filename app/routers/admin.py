@@ -11,7 +11,7 @@ class ResetPasswordQuery(BaseModel):
   userid: str
   password: str
 
-@admin_router.post("/get_user_gws", tags=["admin"])
+@admin_router.post("/reset_password", tags=["admin"])
 async def reset_password(query: ResetPasswordQuery, current_user: User = Depends(super_admin_required)):
   """
   重置密码，超级管理员专用
