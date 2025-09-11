@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from .auth import super_admin_required, User, reset_password_impl
+from .auth import super_admin_required, UserBase, reset_password_impl
 from pydantic import BaseModel
 from typing import List, Any
 from ..utils import is_empty
@@ -12,7 +12,7 @@ class ResetPasswordQuery(BaseModel):
   password: str
 
 @admin_router.post("/reset_password", tags=["admin"])
-async def reset_password(query: ResetPasswordQuery, current_user: User = Depends(super_admin_required)):
+async def reset_password(query: ResetPasswordQuery, current_user: UserBase = Depends(super_admin_required)):
   """
   重置密码，超级管理员专用
   输入1: userid，用户global_id
@@ -27,7 +27,7 @@ async def reset_password(query: ResetPasswordQuery, current_user: User = Depends
   return {"data": ret}
 
 @admin_router.post("/get_user_auth_list", tags=["admin"])
-async def get_user_auth_list(current_user: User = Depends(super_admin_required)):
+async def get_user_auth_list(current_user: UserBase = Depends(super_admin_required)):
   """
   超级管理员专属调用
   获取所有的user_auth列表
@@ -47,7 +47,7 @@ class GetUserGwsQuery(BaseModel):
   userid: str
 
 @admin_router.post("/get_user_gws", tags=["admin"])
-async def get_user_gws(query: GetUserGwsQuery, current_user: User = Depends(super_admin_required)):
+async def get_user_gws(query: GetUserGwsQuery, current_user: UserBase = Depends(super_admin_required)):
   """
   超级管理员专属调用
   获取对应用户的网关。
@@ -68,7 +68,7 @@ class AppendUserGwsQuery(BaseModel):
   gwids: List[str]
 
 @admin_router.post('/append_user_gws', tags=["admin"])
-async def append_user_gws(query: AppendUserGwsQuery, current_user: User = Depends(super_admin_required)):
+async def append_user_gws(query: AppendUserGwsQuery, current_user: UserBase = Depends(super_admin_required)):
   """
   超级管理员专属调用
   填补用户对应的网关。
@@ -100,7 +100,7 @@ class UpdateUserGwsQuery(BaseModel):
   gwids: List[str]
 
 @admin_router.post('/update_user_gws', tags=["admin"])
-async def update_user_gws(query: UpdateUserGwsQuery, current_user: User = Depends(super_admin_required)):
+async def update_user_gws(query: UpdateUserGwsQuery, current_user: UserBase = Depends(super_admin_required)):
   """
   超级管理员专属调用
   更新用户对应的网关。
