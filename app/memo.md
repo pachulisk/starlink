@@ -1,3 +1,41 @@
+-- 创建user_auth_gateways_view
+CREATE OR REPLACE VIEW user_auth_gateways_view AS
+WITH t0 AS (
+        SELECT
+    uag.created_at as created_at,
+    uag.userid as userid,
+    uag.gwid as gwid,
+    g.name as gateway_name
+FROM
+    user_auth_gateways uag
+LEFT JOIN
+    gateway as g
+ON
+    uag.gwid = g.id::VARCHAR
+),
+t1 AS (
+  -- 第一步：将字符串格式的流量值转换为数字
+  SELECT 
+    t0.created_at as created_at,
+    t0.userid as userid,
+    t0.gwid as gwid,
+    t0.gateway_name as gateway_name,
+    ua.username as username
+  FROM t0
+  LEFT JOIN 
+    user_auth as ua
+  ON
+    t0.userid = ua.global_id
+)
+
+SELECT 
+  created_at,
+  gateway_name, 
+  gwid,
+  userid,
+  username
+FROM t1;
+
 -- 创建user_strategy_logs_view
 CREATE OR REPLACE VIEW user_strategy_logs_view AS
 WITH t0 AS (
