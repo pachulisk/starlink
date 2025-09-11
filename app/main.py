@@ -15,6 +15,7 @@ from .routers import fee
 from .routers import auth2, traffic
 from .routers import account, weather
 from .routers import user, group
+from .routers import admin_router
 from .utils import settings, gw_login, get_gateway_by_id
 
 import time

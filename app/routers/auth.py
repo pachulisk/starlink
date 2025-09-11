@@ -6,6 +6,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jwt.exceptions import InvalidTokenError
 import jwt
+from ..utils import is_empty
 import os
 from pydantic import BaseModel
 from app.supabase import supabase
@@ -45,6 +46,7 @@ class User(BaseModel):
     email: str | None = None
     full_name: str | None = None
     disabled: bool | None = None
+    role: str
 
 class UserInDB(User):
     hashed_password: str
@@ -80,6 +82,21 @@ def create_user(username: str, password: str):
     _ = supabase.table(table_name).insert(user_data).execute()
     return user_data
 
+def reset_password_impl(userid: str, password: str):
+    """
+    重置某个用户的密码。
+    输入：userid: 用户的global_id
+    输入：password：用户的新密码，明文
+    """
+    # 检查userid是否为空
+    if is_empty(userid):
+        raise HTTPException(status_code=400, detail="[reset_password_impl]userid is required")
+    TABLE_NAME = "user_auth"
+    hashed_password = get_password_hash(password)
+    res = supabase.table(TABLE_NAME).update({"hashed_password", hashed_password}).eq("global_id", userid).execute()
+    print(f"[reset_password_impl]userid = {userid},res = {str(res)}")
+    return {"data": res.data}
+
 def authenticate_user(username: str, password: str):
     user = get_user(username)
     if not user:
@@ -88,8 +105,6 @@ def authenticate_user(username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
     return user
-
-
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -128,6 +143,19 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def super_admin_required(
+        current_user: User = Depends(get_current_user)
+) -> User:
+    """
+    检查用户是否为超级管理员。
+    """
+    if current_user.role != "SUPER_ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="权限不足，需要超级管理员权限"
+        )
+    return current_user
+
 @auth.post("/token", tags=["auth"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -143,7 +171,10 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={
+            "sub": user.username,
+            "role": user.role
+        }, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
