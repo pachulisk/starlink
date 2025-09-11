@@ -26,6 +26,15 @@ async def reset_password(query: ResetPasswordQuery, current_user: User = Depends
   print(f"[reset_password]: userid = {userid}, ret = {str(ret)}")
   return {"data": ret}
 
+@admin_router.post("/get_user_auth_list", tags=["admin"])
+async def get_user_auth_list(current_user: User = Depends(super_admin_required)):
+  """
+  超级管理员专属调用
+  获取所有的user_auth列表
+  """
+  TABLE_NAME = "user_auth"
+  resp = supabase.table(TABLE_NAME).select("*").execute()
+  return {"data": resp.data}
 
 class GetUserGwsQuery(BaseModel):
   userid: str
