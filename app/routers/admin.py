@@ -34,7 +34,14 @@ async def get_user_auth_list(current_user: User = Depends(super_admin_required))
   """
   TABLE_NAME = "user_auth"
   resp = supabase.table(TABLE_NAME).select("*").execute()
-  return {"data": resp.data}
+  data = []
+  for item in resp.data:
+    p = {
+      "id": item["global_id"],
+      "username": item["username"]
+    }
+    data.append(p)
+  return {"data": data}
 
 class GetUserGwsQuery(BaseModel):
   userid: str
