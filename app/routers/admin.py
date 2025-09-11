@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from .auth import super_admin_required, User, reset_password_impl
 from pydantic import BaseModel
-from type import List, Any
+from typing import List, Any
 from ..utils import is_empty
 from app.supabase import supabase
 admin_router = APIRouter()
