@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from fastapi import APIRouter, HTTPException,Depends,status
-from typing import Annotated
+from typing import Annotated, Dict, Optional
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
+from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from jwt.exceptions import InvalidTokenError
-import jwt
+
 from ..utils import is_empty
 import os
 from pydantic import BaseModel
@@ -41,15 +42,31 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
-class User(BaseModel):
+class UserBase(BaseModel):
+    userid: str
     username: str
     email: str | None = None
     full_name: str | None = None
     disabled: bool | None = None
     role: str
 
-class UserInDB(User):
-    hashed_password: str
+class UserInDB(UserBase):
+    hashed_password: str | None = None
+
+def create_access_token(data: Dict[str, str], expires_delta: Optional[timedelta] = None) -> str:
+    """创建JWT访问令牌"""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(
+        to_encode, 
+        SECRET_KEY, 
+        algorithm=ALGORITHM
+    )
+    return encoded_jwt
 
 def verify_password(plain_password, hashed_password):
     print(plain_password)
@@ -137,15 +154,15 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[UserBase, Depends(get_current_user)],
 ):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 async def super_admin_required(
-        current_user: User = Depends(get_current_user)
-) -> User:
+        current_user: UserBase = Depends(get_current_user)
+) -> UserBase:
     """
     检查用户是否为超级管理员。
     """
@@ -178,9 +195,9 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@auth.get("/users/me/", response_model=User, tags=["auth"])
+@auth.get("/users/me/", response_model=UserBase, tags=["auth"])
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[UserBase, Depends(get_current_active_user)],
 ):
     return current_user
 
