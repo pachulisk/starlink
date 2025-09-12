@@ -37,6 +37,9 @@ settings = Settings()
 # Setup our redis connection for storing the denylist tokens
 redis_conn = Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
+@auth2.post('/access-revokev2')
+def access_revoke():
+    return {"data": "success"}
 
 @auth2.post('/registerv2', tags=["v2"])
 def register(user: User):
