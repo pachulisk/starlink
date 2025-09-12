@@ -183,6 +183,13 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+def is_super_admin(current_user: UserBase) -> bool:
+    role = current_user.role
+    if role != "SUPER_ADMIN":
+        return False
+    else:
+        return True
+
 async def super_admin_required(
         current_user: UserBase = Depends(get_current_user)
 ) -> UserBase:
