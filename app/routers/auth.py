@@ -120,7 +120,7 @@ def reset_password_impl(userid: str, password: str):
         raise HTTPException(status_code=400, detail="[reset_password_impl]userid is required")
     TABLE_NAME = "user_auth"
     hashed_password = get_password_hash(password)
-    res = supabase.table(TABLE_NAME).update({"hashed_password", hashed_password}).eq("global_id", userid).execute()
+    res = supabase.table(TABLE_NAME).update({"hashed_password": hashed_password}).eq("global_id", userid).execute()
     print(f"[reset_password_impl]userid = {userid},res = {str(res)}")
     return {"data": res.data}
 
