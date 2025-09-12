@@ -87,8 +87,8 @@ def get_user(username: str):
             "id": response.data[0]["global_id"],
             "username": response.data[0]["username"],
             "hashed_password": response.data[0]["hashed_password"],
-            "full_name": response.data[0]["fullname"],
-            "role": response.data[0]["fullname"],
+            "full_name": response.data[0]["full_name"],
+            "role": response.data[0]["role"],
             "disabled": False,
             "email": None
         }
