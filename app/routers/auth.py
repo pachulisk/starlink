@@ -106,7 +106,8 @@ def create_user(username: str, password: str):
         "full_name": username,
     }
     _ = supabase.table(table_name).insert(user_data).execute()
-    return user_data
+    user_auth = get_user(username)
+    return user_auth
 
 def reset_password_impl(userid: str, password: str):
     """

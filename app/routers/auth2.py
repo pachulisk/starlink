@@ -47,21 +47,23 @@ def register(user: User):
         raise HTTPException(status_code=401,detail="User already exists")
     # create_access_token() function is used to actually generate the token to use authorization
     # later in endpoint protected
-    create_user(user.username, user.password)
-    access_token = create_access_token(data={"sub": user.username, "id": user.userid})
-    refresh_token = create_access_token(data={"sub": user.username, "id": user.userid})
-    return {"username": user.username, "userid": user.userid, "access_token": access_token, "refresh_token": refresh_token}
+    user_auth = create_user(user.username, user.password)
+    access_token = create_access_token(data={"sub": user_auth.username, "id": user_auth.id})
+    refresh_token = create_access_token(data={"sub": user_auth.username, "id": user_auth.id})
+    return {"username": user.username, "userid": user_auth.id, "access_token": access_token, "refresh_token": refresh_token}
 
 # provide a method to create access tokens. The create_access_token()
 # function is used to actually generate the token to use authorization
 # later in endpoint protected
 @auth2.post('/loginv2', tags=["v2"])
 def login(user: User):
-    if authenticate_user(user.username, user.password) == False:
+    auth_result = authenticate_user(user.username, user.password)
+    if auth_result == False:
         raise HTTPException(status_code=401,detail="Bad username or password")
+    user_base = auth_result
     # subject identifier for who this token is for example id or username from database
-    access_token = create_access_token(data={"sub": user.username, "id": user.userid})
-    refresh_token = create_access_token(data={"sub": user.username, "id": user.userid})
+    access_token = create_access_token(data={"sub": user_base.username, "id": user_base.id})
+    refresh_token = create_access_token(data={"sub": user_base.username, "id": user_base.id})
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 class ResetPasswordV2Query(BaseModel):
