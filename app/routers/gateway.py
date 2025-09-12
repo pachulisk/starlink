@@ -161,6 +161,7 @@ async def read_gateways(current_user: UserBase = Depends(get_current_user)):
     userid = current_user.id
     print(f"[read_gateways]:开始获取gwids, userid = {userid}")
     gwids = get_user_auth_gateways(userid)
+    print(f"[read_gateways]:完成获取gwids, gwids = {str(gwids)}")
     # use supabase client to read all gateways from 'gateway' table
     response = supabase.table("gateway_monthly_view").select("*").in_("id", gwids).execute()
     
