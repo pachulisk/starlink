@@ -4,7 +4,7 @@ from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
 from ..utils import get_device_count, gw_login, get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
-from .auth import UserBase, get_current_user, get_user_auth_gateways
+from .auth import UserBase, get_current_user, get_user_auth_gateways, is_super_admin
 router = APIRouter()
 
 def parse_valid_ipv4(addr):
@@ -162,8 +162,11 @@ async def read_gateways(current_user: UserBase = Depends(get_current_user)):
     print(f"[read_gateways]:开始获取gwids, userid = {userid}")
     gwids = get_user_auth_gateways(userid)
     print(f"[read_gateways]:完成获取gwids, gwids = {str(gwids)}")
-    # use supabase client to read all gateways from 'gateway' table
-    response = supabase.table("gateway_monthly_view").select("*").in_("id", gwids).execute()
+    # 特殊判断：如果当前用户是SUPER_ADMIN，则获取所有网关，否则获取对应gwids的
+    if is_super_admin(current_user):
+        response = supabase.table("gateway_monthly_view").select("*").execute()
+    else:
+        response = supabase.table("gateway_monthly_view").select("*").in_("id", gwids).execute()
     
     # 处理gws
     gws = []
