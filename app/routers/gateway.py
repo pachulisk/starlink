@@ -1,10 +1,10 @@
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
 from fastapi.encoders import jsonable_encoder
 from ..utils import get_device_count, gw_login, get_gws_device_count, get_ratio_by_gwid, is_online, starts_with_number, ping_multi_hosts, is_valid_ipv4, ping, normalize_traffic
-
+from .auth import UserBase, get_current_user, get_user_auth_gateways
 router = APIRouter()
 
 def parse_valid_ipv4(addr):
@@ -153,34 +153,22 @@ def get_users_count_by_gwid(gwid: str):
 
 # 列表
 @router.get("/gateways/", tags=["gateway"])
-async def read_gateways():
+async def read_gateways(current_user: UserBase = Depends(get_current_user)):
+    """
+    根据当前的用户权限，获取所有的网关
+    """
+    # 获取userid
+    userid = current_user.id
+    print(f"[read_gateways]:开始获取gwids, userid = {userid}")
+    gwids = get_user_auth_gateways(userid)
     # use supabase client to read all gateways from 'gateway' table
-    response = supabase.table("gateway_monthly_view").select("*").execute()
-    """
-    {
-      "data": [
-        {
-          "id": 1,
-          "name": "Afghanistan"
-        },
-        {
-          "id": 2,
-          "name": "Albania"
-        },
-        {
-          "id": 3,
-          "name": "Algeria"
-        }
-      ],
-      "count": null
-    }
-    """
+    response = supabase.table("gateway_monthly_view").select("*").in_("id", gwids).execute()
+    
     # 处理gws
     gws = []
     for item in response.data:
         id = item.get("id")
         gws.append(id)
-    
 
     list = []
     # 从response.data中，抽取address部分，做ip连通性检测
