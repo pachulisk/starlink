@@ -83,7 +83,16 @@ def get_user(username: str):
     response = supabase.table(table_name).select("*").eq("username", username).execute()
     print(response)
     if len(response.data) > 0:
-        return UserInDB(**response.data[0])
+        data = {
+            "id": response.data[0]["global_id"],
+            "username": response.data[0]["username"],
+            "hashed_password": response.data[0]["hashed_password"],
+            "full_name": response.data[0]["fullname"],
+            "role": response.data[0]["fullname"],
+            "disabled": False,
+            "email": None
+        }
+        return UserInDB(**data)
     else:
         return None
 
