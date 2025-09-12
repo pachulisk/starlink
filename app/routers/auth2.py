@@ -87,7 +87,7 @@ async def reset_user_password(query: ResetPasswordV2Query, current_user: UserBas
     # 重置用户密码
     res = reset_password_impl(current_user.id, password)
     print(f"[reset_user_password]: success reset password, userid = {current_user.id}, res = {str(res)}")
-    return {"data": res.data}
+    return {"data": res}
 
 # @auth2.post('/refreshv2', tags=["v2"])
 # def refresh(Authorize: AuthJWT = Depends()):

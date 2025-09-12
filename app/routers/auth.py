@@ -122,7 +122,7 @@ def reset_password_impl(userid: str, password: str):
     hashed_password = get_password_hash(password)
     res = supabase.table(TABLE_NAME).update({"hashed_password": hashed_password}).eq("global_id", userid).execute()
     print(f"[reset_password_impl]userid = {userid},res = {str(res)}")
-    return {"data": res.data}
+    return {"data": res}
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
