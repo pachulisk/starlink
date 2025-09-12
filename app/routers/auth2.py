@@ -85,7 +85,7 @@ async def reset_user_password(query: ResetPasswordV2Query, current_user: UserBas
     if authenticate_user(username, old_password) == False:
         raise HTTPException(status_code=401,detail="[reset_passwordv2]: bad username or password")
     # 重置用户密码
-    res = await reset_password_impl(current_user.id, password)
+    res = reset_password_impl(current_user.id, password)
     print(f"[reset_user_password]: success reset password, userid = {current_user.id}, res = {str(res)}")
     return {"data": res.data}
 

@@ -22,7 +22,7 @@ async def reset_password(query: ResetPasswordQuery, current_user: UserBase = Dep
   password = query.password
   if is_empty(userid) or is_empty(password):
     raise HTTPException(status_code=400, detail="[reset_password]userid and password are required")
-  ret = await reset_password_impl(userid, password)
+  ret = reset_password_impl(userid, password)
   print(f"[reset_password]: userid = {userid}, ret = {str(ret)}")
   return {"data": ret}
 
