@@ -96,6 +96,19 @@ def get_user(username: str):
     else:
         return None
 
+def get_user_auth_gateways(userid: str):
+    """
+    根据userid，查询user_auth_gateways表，获取对应的gwids
+    入参1: userid，用户id
+    返回：数组，gwids
+    """
+    gwids = []
+    TABLE_NAME = "user_auth_gateways"
+    res = supabase.table(TABLE_NAME).select("*").eq("userid", userid).execute()
+    for item in res.data:
+        gwids.append(item["gwid"])
+    return gwids
+
 def create_user(username: str, password: str):
     table_name = "user_auth"
     hashed_password = get_password_hash(password)
