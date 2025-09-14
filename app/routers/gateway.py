@@ -320,7 +320,14 @@ async def delete_gateway(gwid: str, current_user: UserBase = Depends(get_current
 
 # 更新
 @router.patch("/gateways/{gwid}", tags=["gateway"])
-async def update_gateway(gwid: str, gw: Gateway):
+async def update_gateway(gwid: str, gw: Gateway, current_user: UserBase = Depends(get_current_user)):
+    """
+    更新网关内容
+    只对当前有权限的用户生效
+    """
+    gwids = get_user_auth_gateways(current_user.id)
+    if gwid not in gwids:
+        raise HTTPException(status_code=401, detail="无权限访问该接口。")
     print("== start update gateway, gwid = ", gwid)
     update_gw_encoded = jsonable_encoder(gw)
     print("== update_gw_encoded: ", update_gw_encoded)
