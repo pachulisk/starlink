@@ -192,6 +192,14 @@ async def list_user_with_groups(query: ListUserWithGroupsQuery):
     data = await list_user_with_groups_impl(gwid)
     return { "data": data }
 
+def clear_virtual_group(gwid:str):
+    """
+    将给定gwid网关下的gw_users表中的virtual_group设置为空字符串
+    """
+    TABLE_NAME = "gw_users"
+    response = supabase.table(TABLE_NAME).update({'virtual_group', ''}).eq("gwid", gwid).execute()
+    return response
+
 class SyncUserVirtualGroupQuery(BaseModel):
     gwid: str
 
@@ -199,6 +207,8 @@ async def sync_user_virtual_group_task(gwid: str):
     user_list = await list_user_with_groups_impl(gwid)
     # 1.5 打印user_list
     print(f"sync_user_virtual_group: user_list = {user_list}")
+    # 1.6 清空gw_users表对应网关的virtual_group
+    clear_virtual_group(gwid)
     # 2. 调用batch_update_users_group
     result = batch_update_users_group(user_list)
     print(f"sync_user_virtual_group: batch update users group, result is {result}")
@@ -211,7 +221,6 @@ async def sync_user_virtual_group(query: SyncUserVirtualGroupQuery):
     gwid = query.gwid
     res = await asyncio.gather(batch_sync_group_task(gwid), sync_user_virtual_group_task(gwid))
     return {"data": "success"}
-
 
 
 @group.post("/update_user_group", tags=["group"])
