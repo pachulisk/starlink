@@ -197,7 +197,7 @@ def clear_virtual_group(gwid:str):
     将给定gwid网关下的gw_users表中的virtual_group设置为空字符串
     """
     TABLE_NAME = "gw_users"
-    response = supabase.table(TABLE_NAME).update({'virtual_group', ''}).eq("gwid", gwid).execute()
+    response = supabase.table(TABLE_NAME).update({'virtual_group':''}).eq("gwid", gwid).execute()
     return response
 
 class SyncUserVirtualGroupQuery(BaseModel):
