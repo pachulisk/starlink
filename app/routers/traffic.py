@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import json
 import pandas as pd
 from ..tasks.sync_user import SyncGwUsers, ReadGwUsers 
-
+from .group_service import remove_user_group_impl, RemoveUserGroupQuery
 traffic = APIRouter()
 
 
@@ -390,9 +390,12 @@ async def fetch_user_sid(gwid:str, userid:str):
     global_id = f"{gwid}_{userid}"
     response = (supabase.table(TABLE_NAME).select("*").eq("global_id", global_id)).execute()
     if len(response.data) > 0:
-        return extract_remark(response.data[0].get("remark"))
+        return {
+            "sid": extract_remark(response.data[0].get("remark")),
+            "username": response.data[0].get("username")
+        }
     else:
-        return ""
+        return {"sid": "", "username": ""}
 
 async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
     with gw_login(gwid) as sdk_obj:
@@ -408,7 +411,10 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
         sdk_obj.config_apply()
 
         # 获取用户的sid
-        old_sid = await fetch_user_sid(gwid, userid)
+        # old_sid = await fetch_user_sid(gwid, userid)
+        user_data = await fetch_user_sid(gwid, userid)
+        username = user_data.username
+        old_sid = user_data.sid
         # 更新supabase上的gw_users表中，对应的用户名称
         # global_id = gwid + "_" + userid
         global_id = f"{gwid}_{userid}"
@@ -423,7 +429,9 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
         
         # 插入用户策略更新日志
         await insert_user_strategy_logs(gwid, userid, old_sid, sid)
-
+        # 将用户的虚拟组清理
+        print("[update_user_traffic_strategy_impl] remove_user_group, gwid = {gwid}, username = {username}")
+        await remove_user_group_impl(RemoveUserGroupQuery(gwid=gwid, username=username))
         # 启动luigi任务，同步用户表到supabase
         tasks = [
             SyncGwUsers(gwid=gwid),
