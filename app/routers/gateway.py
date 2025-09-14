@@ -309,7 +309,12 @@ async def create_gateway(gw: Gateway, current_user: UserBase = Depends(get_curre
 
 # 删除
 @router.delete("/gateways/{gwid}", tags=["gateway"])
-async def delete_gateway(gwid: str):
+async def delete_gateway(gwid: str, current_user: UserBase = Depends(get_current_user)):
+    """
+    删除网关，只有超级管理员才能使用
+    """
+    if not is_super_admin(current_user):
+        raise HTTPException(status_code=401, detail="无权限访问该接口。")
     res = supabase.table('gateway').delete().eq('id', gwid).execute()
     return res
 
