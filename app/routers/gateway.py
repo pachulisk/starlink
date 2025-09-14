@@ -327,7 +327,8 @@ async def update_gateway(gwid: str, gw: Gateway, current_user: UserBase = Depend
     """
     gwids = get_user_auth_gateways(current_user.id)
     if gwid not in gwids:
-        raise HTTPException(status_code=401, detail="无权限访问该接口。")
+        if not is_super_admin(current_user):
+            raise HTTPException(status_code=401, detail="无权限访问该接口。")
     print("== start update gateway, gwid = ", gwid)
     update_gw_encoded = jsonable_encoder(gw)
     print("== update_gw_encoded: ", update_gw_encoded)
