@@ -1308,10 +1308,11 @@ async def get_account_list(query: GetAccountListQuery):
         luigi.build([UpsertUsersToSupabase(json.dumps(lst))], local_scheduler=True)
     # 2. 查user_traffic_view
     r = None
+    TABLE_NAME = "user_traffic_monthly_view"
     if is_empty(gwid):
-        r = supabase.table("user_traffic_view").select("*").order("userid", desc=True).execute()
+        r = supabase.table(TABLE_NAME).select("*").order("userid", desc=True).execute()
     else:
-        r = supabase.table("user_traffic_view").select("*").eq("gwid", gwid).order("userid", desc=True).execute()
+        r = supabase.table(TABLE_NAME).select("*").eq("gwid", gwid).order("userid", desc=True).execute()
     print(f"[DEBUG][get_account_list]: user_traffic_view = {r}")
     data = []
     for item in r.data:
