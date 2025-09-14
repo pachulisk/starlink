@@ -278,7 +278,12 @@ async def get_full_gateways():
 
 # 创建
 @router.post("/add_gateway", tags=["gateway"])
-async def create_gateway(gw: Gateway):
+async def create_gateway(gw: Gateway, current_user: UserBase = Depends(get_current_user)):
+    """
+    增加新的网关，只有超级管理员才能使用
+    """
+    if not is_super_admin(current_user):
+        raise HTTPException(status_code=401, detail="无权限访问该接口。")
     ip = gw.address
     # 如果是以数字开头的，则加上http://前缀
     if starts_with_number(ip):
