@@ -43,6 +43,7 @@ def remove_user_group_impl(query:RemoveUserGroupQuery):
         print(f"[remove_user_group_impl]: rm_virtual_group result = {result}")
         resp = clear_supabase_user_virtual_group(gwid, username)
         print(f"[remove_user_group_impl]: clear supabase user virtual group, gwid = {gwid}, username = {username}, resp = {str(resp)}")
+        return {"data": "true" }
 
 
 def clear_supabase_user_virtual_group(gwid: str, username: str):
