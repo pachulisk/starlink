@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 import pandas as pd
-from .group_service import UpdateUserGroupQuery, update_user_group_impl
+from .group_service import UpdateUserGroupQuery, update_user_group_impl, RemoveUserGroupQuery, remove_user_group_impl
 
 group = APIRouter()
 
@@ -236,3 +236,11 @@ async def update_user_group(query: UpdateUserGroupQuery):
     """
     return update_user_group_impl(query)
 
+@group.post("/remove_user_group", tags=["group"])
+async def remove_user_group(query: RemoveUserGroupQuery):
+    """
+    删除用户所有虚拟组，并且更新用户表gw_users中virtual_group字段为空。
+    输入参数：gwid=网关id
+    输入参数:username=用户名称
+    """
+    return remove_user_group_impl(query)

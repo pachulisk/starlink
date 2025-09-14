@@ -287,27 +287,27 @@ class RmVirtualGroupRequest(BaseModel):
     gwid: str
     ip: str
 
-@app.post("/rm_virtual_group")
-async def rm_virtual_group(request: RmVirtualGroupRequest):
-    gwid = request.gwid
-    ip = request.ip
-    gw = await get_gateway_by_id(gwid)
-    if gw is None or len(gw.data) == 0:
-        raise HTTPException(status_code=400, detail="gateway not found")
-    username = gw.data[0].get('username')
-    password = gw.data[0].get('password')
-    address = gw.data[0].get('address')
-    sdk = SDK()
-    try:
-        if sdk.login(address, username, password):
-            result = sdk.rm_virtual_group(ip)
-            return {"result": result}
-        else:
-            raise HTTPException(status_code=401, detail="登录失败")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        sdk.logout()
+# @app.post("/rm_virtual_group")
+# async def rm_virtual_group(request: RmVirtualGroupRequest):
+#     gwid = request.gwid
+#     ip = request.ip
+#     gw = await get_gateway_by_id(gwid)
+#     if gw is None or len(gw.data) == 0:
+#         raise HTTPException(status_code=400, detail="gateway not found")
+#     username = gw.data[0].get('username')
+#     password = gw.data[0].get('password')
+#     address = gw.data[0].get('address')
+#     sdk = SDK()
+#     try:
+#         if sdk.login(address, username, password):
+#             result = sdk.rm_virtual_group(ip)
+#             return {"result": result}
+#         else:
+#             raise HTTPException(status_code=401, detail="登录失败")
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+#     finally:
+#         sdk.logout()
 
 class NetworkRequest(BaseModel):
     gwid: str
