@@ -1294,9 +1294,9 @@ def process_online_field(item):
     """
     exceed = item.get("exceed")
     if exceed is True:
-        return "false"
+        return "False"
     else:
-        return "true"
+        return "True"
 
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
