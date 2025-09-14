@@ -413,8 +413,8 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
         # 获取用户的sid
         # old_sid = await fetch_user_sid(gwid, userid)
         user_data = await fetch_user_sid(gwid, userid)
-        username = user_data.username
-        old_sid = user_data.sid
+        username = user_data["username"]
+        old_sid = user_data["sid"]
         # 更新supabase上的gw_users表中，对应的用户名称
         # global_id = gwid + "_" + userid
         global_id = f"{gwid}_{userid}"
