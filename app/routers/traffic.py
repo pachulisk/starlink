@@ -431,7 +431,7 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
         await insert_user_strategy_logs(gwid, userid, old_sid, sid)
         # 将用户的虚拟组清理
         print("[update_user_traffic_strategy_impl] remove_user_group, gwid = {gwid}, username = {username}")
-        await remove_user_group_impl(RemoveUserGroupQuery(gwid=gwid, username=username))
+        remove_user_group_impl(RemoveUserGroupQuery(gwid=gwid, username=username))
         # 启动luigi任务，同步用户表到supabase
         tasks = [
             SyncGwUsers(gwid=gwid),
