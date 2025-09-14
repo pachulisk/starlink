@@ -385,7 +385,7 @@ async def insert_user_strategy_logs(gwid, userid, old_sid, new_sid):
     return { "data": response }
 
 
-async def fetch_user_sid(gwid:str, userid:str):
+def fetch_user_sid(gwid:str, userid:str):
     TABLE_NAME = "gw_users"
     global_id = f"{gwid}_{userid}"
     response = (supabase.table(TABLE_NAME).select("*").eq("global_id", global_id)).execute()
@@ -412,7 +412,7 @@ async def update_user_traffic_strategy_impl(gwid:str, userid:str, sid: str):
 
         # 获取用户的sid
         # old_sid = await fetch_user_sid(gwid, userid)
-        user_data = await fetch_user_sid(gwid, userid)
+        user_data = fetch_user_sid(gwid, userid)
         username = user_data["username"]
         old_sid = user_data["sid"]
         # 更新supabase上的gw_users表中，对应的用户名称
