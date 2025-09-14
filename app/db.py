@@ -1287,11 +1287,16 @@ def get_total_traffic(item, unit, ratio):
     return normalize_traffic(up + down, unit, ratio)
 
 def process_online_field(item):
-    online_item = item.get("online")
-    if online_item is None:
-        return None
+    """
+    生成online字段
+    注意：先获取exceed超流量字段。如果超流量字段是true，则证明已经进入了超流量组，不在线，返回false;
+    如果超流量字段是false，则返回true
+    """
+    exceed = item.get("exceed")
+    if exceed is True:
+        return False
     else:
-        return online_item.title()
+        return True
 
 @DB.post("/get_account_list", tags=["DB"])
 async def get_account_list(query: GetAccountListQuery):
