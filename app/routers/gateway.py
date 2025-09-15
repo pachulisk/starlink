@@ -85,7 +85,7 @@ async def test_multi_ping(query: TestMultiPingParam):
     if query.update is True:
         TABLE_NAME = "gateway"
         for addr, online in response.items():
-            supabase.table(TABLE_NAME).update({"online": "true" if online is True else "false"}).eq("address", addr).execute()
+            supabase.table(TABLE_NAME).update({"online": "True" if online is True else "False"}).eq("address", addr).execute()
     return { "data": response }
     
 class Gateway(BaseModel):
