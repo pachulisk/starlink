@@ -2,11 +2,12 @@ from fastapi import FastAPI, HTTPException, Request ,Depends,status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import csv
+import sentry_sdk
 from dotenv import load_dotenv
 import asyncio
 from starlette.status import HTTP_504_GATEWAY_TIMEOUT
 load_dotenv()
-from fastapi_jwt_auth.exceptions import AuthJWTException
+# from fastapi_jwt_auth.exceptions import AuthJWTException
 from app.sdk import SDK
 from .routers import gateway
 from .routers import auth
@@ -22,7 +23,12 @@ import time
 from fastapi import Request, Response
 from starlette.types import ASGIApp
 
-
+sentry_sdk.init(
+    dsn="https://98a68184c327d8a246ae2f2e2348b30c@o4510023743700992.ingest.us.sentry.io/4510023749730304",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
 
 
 # class DynamicTimeoutMiddleware:
@@ -98,12 +104,12 @@ async def timeout_middleware(request: Request, call_next):
 #     )
 
 # app.add_exception_handler(AuthJWTException, credential_exception_handler)
-@app.exception_handler(AuthJWTException)
-def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
-    )
+# @app.exception_handler(AuthJWTException)
+# def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+#     return JSONResponse(
+#         status_code=exc.status_code,
+#         content={"detail": exc.message}
+#     )
     
 app.include_router(gateway.router)
 app.include_router(auth.auth)
