@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Dict
 from fastapi import APIRouter, HTTPException, Depends
 from app.supabase import supabase
 from pydantic import BaseModel,ConfigDict
@@ -21,6 +22,15 @@ def parse_valid_ipv4(addr):
         return ""
     else:
         return ipv4
+
+def check_online_with_dict(gws2addrs: Dict[str, str]):
+    addrs = []
+    gws = []
+    for gwid, addr in gws2addrs:
+        gwid.append(gwid)
+        addrs.append(addr)
+    return check_online_multi(addrs, gws)
+
 
 def check_online_multi(addrs, gws=None):
     # addrs是候选的地址列表。例如["10.188.188.12", "10.188.188.13"]
@@ -64,12 +74,12 @@ def check_online_multi(addrs, gws=None):
     return ret
 
 class TestMultiPingParam(BaseModel):
-    addr: list[str]
+    gwid2addr: list[Dict[str, str]]
 
 @router.post("/test_multi_ping", tags=["test"])
 async def test_multi_ping(query: TestMultiPingParam):
-    print(query.addr)
-    response = check_online_multi(query.addr)
+    print(query.gwid2addr)
+    response = check_online_with_dict(query.gwid2addr)
     return { "data": response }
     
 class Gateway(BaseModel):
