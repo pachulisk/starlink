@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 from datetime import timedelta
 from redis import Redis
-from .auth import UserBase, create_access_token, get_current_user, create_user, get_user, authenticate_user, reset_password_impl
+from .auth import UserBase, super_admin_required, create_access_token, get_current_user, create_user, get_user, authenticate_user, reset_password_impl
 import os
 
 # 获取.env 文件中的变量值
@@ -42,8 +42,9 @@ def access_revoke():
     return {"data": "success"}
 
 @auth2.post('/registerv2', tags=["v2"])
-def register(user: User):
+def register(user: User, current_user: UserBase = Depends(super_admin_required)):
     """
+    只有超级管理员才能使用。
     使用registerv2接口创建新的用户。如果用户名已经存在，则返回401错误。
     """
     if get_user(user.username) == True:
