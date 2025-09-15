@@ -23,8 +23,8 @@ def parse_valid_ipv4(addr):
         return ipv4
 
 def check_online_multi(addrs, gws=None):
-    # addrs是候选的地址列表。
-    # 需要返回一个kv, key是addrs中的每一个地址，value是True或者False,
+    # addrs是候选的地址列表。例如["10.188.188.12", "10.188.188.13"]
+    # 返回一个kv, key是addrs中的每一个地址，value是True或者False,
     # True代表online, False代表offline
     # 1. 检查addrs是否为空，如果为空，直接返回空kv
     if addrs is None or []:
