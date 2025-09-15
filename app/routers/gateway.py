@@ -75,11 +75,17 @@ def check_online_multi(addrs, gws=None):
 
 class TestMultiPingParam(BaseModel):
     gwid2addr: Dict[str, str]
+    update: bool
 
 @router.post("/test_multi_ping", tags=["test"])
 async def test_multi_ping(query: TestMultiPingParam):
     print(query.gwid2addr)
     response = check_online_with_dict(query.gwid2addr)
+    # 如果update是true，则更新supabase表中的内容
+    if query.update is True:
+        TABLE_NAME = "gateway"
+        for addr, online in response.items():
+            supabase.table(TABLE_NAME).update({"online": "true" if online is True else "false"}).eq("address", addr).execute()
     return { "data": response }
     
 class Gateway(BaseModel):
