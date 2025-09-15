@@ -318,6 +318,16 @@ async def delete_gateway(gwid: str, current_user: UserBase = Depends(get_current
     res = supabase.table('gateway').delete().eq('id', gwid).execute()
     return res
 
+@router.post("/fetch_gwids", tags=["gateway"])
+async def fetch_gwids():
+    """
+    获取所有gwids
+    """
+    TABLE_NAME = "gateway"
+    resp = supabase.table(TABLE_NAME).select("id").execute()
+    data = [item['id'] for item in resp.data]
+    return {"data": data}
+
 # 更新
 @router.patch("/gateways/{gwid}", tags=["gateway"])
 async def update_gateway(gwid: str, gw: Gateway, current_user: UserBase = Depends(get_current_user)):
