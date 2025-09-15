@@ -27,7 +27,7 @@ def check_online_with_dict(gws2addrs: Dict[str, str]):
     addrs = []
     gws = []
     for gwid, addr in gws2addrs.items():
-        gwid.append(gwid)
+        gws.append(gwid)
         addrs.append(addr)
     return check_online_multi(addrs, gws)
 
