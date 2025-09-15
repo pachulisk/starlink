@@ -1,3 +1,16 @@
+-- 创建gw_users_view
+CREATE OR REPLACE VIEW gw_users_view AS
+SELECT 
+    u.*,
+    CASE 
+        WHEN g.alias LIKE '%超%' THEN true 
+        ELSE false 
+    END AS exceed
+FROM 
+    public.gw_users u
+LEFT JOIN 
+    public.gw_groups g ON u.virtual_group = g.global_id;
+
 -- 创建user_auth_gateways_view
 CREATE OR REPLACE VIEW user_auth_gateways_view AS
 WITH t0 AS (
@@ -11,7 +24,7 @@ FROM
 LEFT JOIN
     gateway as g
 ON
-    uag.gwid = g.id::VARCHAR
+    uag.gwid = g.id::varchar
 ),
 t1 AS (
   -- 第一步：将字符串格式的流量值转换为数字
@@ -212,6 +225,7 @@ WITH t0 AS (
     gu.gwid,
     gu."group",
     gu.online,
+    gu.exceed,
     gu.datelimit,
     gu.delete_mark,
     gu.id as userid,
@@ -219,7 +233,7 @@ WITH t0 AS (
 FROM 
     t1
 RIGHT JOIN 
-    gw_users gu 
+    gw_users_view gu 
 ON 
     t1.tmp_username = gu.username
 ),
@@ -231,6 +245,7 @@ ON
     t2.gwid,
     t2."group",
     t2.online,
+    t2.exceed,
     t2.datelimit,
     t2.delete_mark,
     t2.userid,
@@ -252,6 +267,7 @@ SELECT
     t3.downtraffic,
     t3."group",
     t3.online,
+    t3.exceed,
     t3.datelimit,
     t3.delete_mark,
     t3.remark,
@@ -430,7 +446,7 @@ SELECT
     g.serial_no,
     g.client_name,
     g.enable_time,
-    g.online,
+    CAST(g.online AS boolean) AS online,
     g.fleet,
     t3.up,
     t3.down,
