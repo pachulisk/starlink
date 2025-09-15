@@ -195,7 +195,7 @@ async def read_gateways(current_user: UserBase = Depends(get_current_user)):
     addrs = []
     for item in response.data:
         addrs.append(item.get("address"))
-    check_ip_result = check_online_multi(addrs, gws)
+    # check_ip_result = check_online_multi(addrs, gws)
 
     # kvs = await get_gws_device_count(gws)
 
@@ -218,7 +218,7 @@ async def read_gateways(current_user: UserBase = Depends(get_current_user)):
             "serial_no": item.get('serial_no'),
             "client_name": item.get('client_name'),
             "enable_time": item.get('enable_time'),
-            "online": check_ip_result.get(item.get("address")),
+            "online": item.get("online"), #check_ip_result.get(item.get("address")),
             "fleet": item.get('fleet'), 
             "total_traffic": normalize_traffic(total_traffic, "GB", ratio), # 网关流量
             "device_count": device_count, # 网关设备数
