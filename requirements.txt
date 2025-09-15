@@ -10,7 +10,6 @@ passlib[bcrypt]
 pika
 redis
 celery[redis]
-fastapi-jwt-auth[asymmetric]
 python-jose[cryptography]
 python-dotenv
 chromadb
@@ -19,3 +18,4 @@ pandas
 multiping
 upstash-redis
 neo4j
+sentry-sdk[fastapi]
