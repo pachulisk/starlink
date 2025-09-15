@@ -324,8 +324,8 @@ async def fetch_gwids():
     获取所有gwids
     """
     TABLE_NAME = "gateway"
-    resp = supabase.table(TABLE_NAME).select("id").execute()
-    data = [item['id'] for item in resp.data]
+    resp = supabase.table(TABLE_NAME).select("id, address").execute()
+    data = [{"id": item['id'], "ip": item["address"]} for item in resp.data]
     return {"data": data}
 
 # 更新
