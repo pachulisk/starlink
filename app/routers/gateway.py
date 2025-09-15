@@ -74,7 +74,7 @@ def check_online_multi(addrs, gws=None):
     return ret
 
 class TestMultiPingParam(BaseModel):
-    gwid2addr: list[Dict[str, str]]
+    gwid2addr: Dict[str, str]
 
 @router.post("/test_multi_ping", tags=["test"])
 async def test_multi_ping(query: TestMultiPingParam):
