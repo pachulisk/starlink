@@ -18,6 +18,7 @@ from .routers import account, weather
 from .routers import user, group
 from .routers import admin
 from .utils import settings, gw_login, get_gateway_by_id
+from jose import JWTError, ExpiredSignatureError  # 导入jose的异常类
 
 import time
 from fastapi import Request, Response
@@ -50,6 +51,22 @@ sentry_sdk.init(
 # 加载.env 文件
 
 app = FastAPI()
+
+# 自定义JWT异常处理器
+@app.exception_handler(ExpiredSignatureError)
+async def expired_signature_exception_handler(request: Request, exc: ExpiredSignatureError):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"detail": "令牌已过期，请重新登录"}
+    )
+
+# 处理其他JWT相关错误
+@app.exception_handler(JWTError)
+async def jwt_exception_handler(request: Request, exc: JWTError):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"detail": "无效的令牌，请检查令牌是否正确"}
+    )
 
 async def get_csv_as_dict(file_path: str):
     result = {}
