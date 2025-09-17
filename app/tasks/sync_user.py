@@ -112,6 +112,10 @@ class SyncGwUsers(luigi.Task):
     def requires(self):
         # 定义此任务依赖的任务
         return ReadGwUsers(gwid=self.gwid)
+    
+    def output(self):
+        """任务完成标记文件"""
+        return luigi.LocalTarget(f"data/sync_gwusers_complete_{self.task_id}.json")
 
     def run(self):
         # 读取上一个任务生成的数据文件
